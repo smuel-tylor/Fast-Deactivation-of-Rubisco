@@ -1170,4 +1170,4 @@ plot.Acifit <- function(input,
 	      )
 	    }
 	  }
-	}
+}
