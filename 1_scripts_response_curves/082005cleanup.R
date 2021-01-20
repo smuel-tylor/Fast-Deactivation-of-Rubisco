@@ -85,7 +85,7 @@ plotAciifis <- function(dat){
   }
 }
 
-#plotAciifis(cp.Aci[cp.Aci$plant == levels(cp.Aci$plant)[1], ])
+#plotAciifis(AC[AC$plant == levels(AC$plant)[1], ])
 
 plot.Acionegeno <- function(geno, data){
   x11(w = 10, h = 6)
@@ -98,9 +98,9 @@ plot.Acionegeno <- function(geno, data){
   )
 }
 
-cp.Aci <- cp[cp$curve == "Aci", ]
+AC <- cp[cp$curve == "Aci", ]
 
-lapply(levels(cp.Aci$geno), plot.Acionegeno, data = cp.Aci)
+lapply(levels(AC$geno), plot.Acionegeno, data = AC)
 
 #there are no clear issues here
 #but will remove the redundant 'return to normal' points
@@ -108,15 +108,15 @@ lapply(levels(cp.Aci$geno), plot.Acionegeno, data = cp.Aci)
 #around the operating point, i.e., they represent pseudoreps
 
 #an example
-cp.Aci[cp.Aci$plant == "IT82E-16_1", "co2_at"]
+AC[AC$plant == "IT82E-16_1", "co2_at"]
 #in an unsorted dataset it is usually points 8 and 17
 
 #filter out these points and plot result
-cp.Aci <- by(cp.Aci, cp.Aci$plant, identity)
-cp.Aci <- lapply(cp.Aci, function(.){ .[c(1:7,9:16), ] })
-cp.Aci <- do.call(rbind, cp.Aci)
+AC <- by(AC, AC$plant, identity)
+AC <- lapply(AC, function(.){ .[c(1:7,9:16), ] })
+AC <- do.call(rbind, AC)
 
-lapply(levels(cp.Aci$geno), plot.Acionegeno, data = cp.Aci)
+lapply(levels(AC$geno), plot.Acionegeno, data = AC)
 
 ################################################################################
 #light responses
@@ -143,7 +143,7 @@ plotAQifis <- function(dat){
   }
 }
 
-#plotAQifis(cp.AQ[cp.AQ$plant == levels(cp$plant)[1], ])
+#plotAQifis(AQ[AQ$plant == levels(cp$plant)[1], ])
 
 plot.AQonegeno <- function(geno, data){
   x11(w = 10, h = 6)
@@ -156,33 +156,33 @@ plot.AQonegeno <- function(geno, data){
   )
 }
 
-cp.AQ <- cp[cp$curve == "AQ", ]
+AQ <- cp[cp$curve == "AQ", ]
 
-lapply(levels(cp.AQ$geno), plot.AQonegeno, data = cp.AQ)
+lapply(levels(AQ$geno), plot.AQonegeno, data = AQ)
 
 #Remove 'return to 1500' points from end of curves
 #an example
-cp.AQ[cp.AQ$plant == "IT82E-16_1", "Qin"]
+AQ[AQ$plant == "IT82E-16_1", "Qin"]
 #in an unsorted dataset it is usually points 8 and 17
 
-cp.AQ <- by(cp.AQ, cp.AQ$plant, identity)
-cp.AQ <- lapply(cp.AQ,
+AQ <- by(AQ, AQ$plant, identity)
+AQ <- lapply(AQ,
                 function(.){
                   if (length(.[, 1]) > 0) {
                     .[c(1:(length(.[, 1]) - 1)), ]
                   }
                   }
                 )
-cp.AQ <- do.call(rbind, cp.AQ)
+AQ <- do.call(rbind, AQ)
 
-lapply(levels(cp.AQ$geno), plot.AQonegeno, data = cp.AQ)
+lapply(levels(AQ$geno), plot.AQonegeno, data = AQ)
 
 ################################################################################
 #sun-shade-sun inductions
 #look at IT86D-1010-9 and PI862537-2 inductions
 # (cases where two inductions were recorded)
 # - expect 2nd induction to be better
-cp.ind <- cp[cp$curve == "induction", ]
+inds <- cp[cp$curve == "induction", ]
 
 plotIndifis <- function(dat){
   if (nrow(dat) > 1){
@@ -196,7 +196,7 @@ plotIndifis <- function(dat){
   }
 }
 
-#plotIndifis(cp.ind[cp.ind$plant == levels(cp.ind$plant)[1], ])
+#plotIndifis(inds[inds$plant == levels(inds$plant)[1], ])
 
 plot.Indonegeno <- function(geno, data){
   x11(w = 10, h = 6)
@@ -209,21 +209,21 @@ plot.Indonegeno <- function(geno, data){
   )
 }
 
-lapply(levels(cp.ind$geno), plot.Indonegeno, data = cp.ind)
+lapply(levels(inds$geno), plot.Indonegeno, data = inds)
 
 x11()
 plot(gsw~induction.s,
-			data = cp.ind[cp.ind$plant == "IT86D-1010_9", ],
+			data = inds[inds$plant == "IT86D-1010_9", ],
 			ylim = c(0, 1),
 			xlim = c(-1320, 1800)
 			)
 plot(A~induction.s,
-			data = cp.ind[cp.ind$plant == "IT86D-1010_9", ], 
+			data = inds[inds$plant == "IT86D-1010_9", ], 
 			ylim = c(0, 43),
 			xlim = c(-1320, 1800)
 			)
 plot(Pci~induction.s,
-			data = cp.ind[cp.ind$geno == "IT86D-1010_9", ], 
+			data = inds[inds$geno == "IT86D-1010_9", ], 
 			ylim = c(0, 43),
 			xlim = c(-1320, 1800)
 			)
@@ -231,48 +231,48 @@ plot(Pci~induction.s,
 cp[cp$plant == "IT86D-1010_9" & cp$curve == "Aci", c("A", "gsw")]		
 
 plot(A ~ Pci,
-			data = cp.Aci[cp.Aci$plant == "IT86D-1010_9", ], 
+			data = AC[AC$plant == "IT86D-1010_9", ], 
 			ylim = c(0, 43),
 			xlim = c(0, 60)
 			)
 points(A ~ Pci,
-				data = cp.ind[cp.ind$plant == "IT86D-1010_9", ],
+				data = inds[inds$plant == "IT86D-1010_9", ],
 				col = 2
 				)
 #Both responses overlay the A/ci response fairly well.
 #The first response may better characterise induction without
 # the modifications of gsw that result from Aci/AQ
 #the second curve shows a more usual stomatal response during shade	
-cp.ind[cp.ind$plant == "IT86D-1010_9" & cp.ind$curve == "induction",
+inds[inds$plant == "IT86D-1010_9" & inds$curve == "induction",
    c("obs", "induction.s")]
 #drop the first induction
 #i.e.,data with obs <= 363
-cp.ind <- cp.ind[!(cp.ind$plant == "IT86D-1010_9" & cp.ind$obs <= 363), ]
+inds <- inds[!(inds$plant == "IT86D-1010_9" & inds$obs <= 363), ]
 
 plot(A ~ Pci,
-			data = cp.Aci[cp.Aci$plant == "IT86D-1010_9", ], 
+			data = AC[AC$plant == "IT86D-1010_9", ], 
 			ylim = c(0, 43),
 			xlim = c(0, 60)
 			)
 points(A ~ Pci,
-				data = cp.ind[cp.ind$plant == "IT86D-1010_9", ],
+				data = inds[inds$plant == "IT86D-1010_9", ],
 				col = 2
 				)
 
 plot(gsw ~ induction.s,
-			data = cp.ind[cp.ind$plant == "IT82E-16_2", ], 
+			data = inds[inds$plant == "IT82E-16_2", ], 
 			ylim = c(0, 1),
 			xlim = c(-1320, 1800)
 			)
 #one of these is very noisy,  but in the other gsw does not recover
 
 plot(A ~ induction.s,
-			data = cp.ind[cp.ind$plant == "IT82E-16_2", ], 
+			data = inds[inds$plant == "IT82E-16_2", ], 
 			ylim = c(0, 43),
 			xlim = c(-1320, 1800)
 			)
 plot(Pci ~ induction.s,
-			data = cp.ind[cp.ind$plant == "IT82E-16_2", ], 
+			data = inds[inds$plant == "IT82E-16_2", ], 
 			ylim = c(0, 43),
 			xlim = c(-1320, 1800)
 			)
@@ -280,37 +280,37 @@ plot(Pci ~ induction.s,
 #this is because gsw recovers,  whereas
 #second attempt does not show complete recovery
 plot(A ~ Pci,
-			data = cp.Aci[cp$plant == "IT82E-16_9", ], 
+			data = AC[cp$plant == "IT82E-16_9", ], 
 			ylim = c(0, 43),
 			xlim = c(0, 60)
 			)
 points(A ~ Pci,
-				data = cp.ind[cp.ind$plant == "IT82E-16_9", ],
+				data = inds[inds$plant == "IT82E-16_9", ],
 				col = 2
 				)
 
-cp.ind[cp.ind$plant == "IT82E-16_2", c("obs", "induction.s", "A", "gsw")]
+inds[inds$plant == "IT82E-16_2", c("obs", "induction.s", "A", "gsw")]
 #exclude first induction by removing obs >= 547
-cp.ind <- cp.ind[!(cp.ind$plant == "IT82E-16_2" & cp.ind$obs >= 547), ]
+inds <- inds[!(inds$plant == "IT82E-16_2" & inds$obs >= 547), ]
 
 plot(A ~ Pci,
-			data = cp.Aci[cp.Aci$plant == "IT82E-16_9", ], 
+			data = AC[AC$plant == "IT82E-16_9", ], 
 			ylim = c(0, 43),
 			xlim = c(0, 60)
 			)
 points(A ~ Pci,
-				data = cp.ind[cp.ind$plant == "IT82E-16_9", ],
+				data = inds[inds$plant == "IT82E-16_9", ],
 				col = 2
 				)
 
-lapply(levels(cp.ind$geno), plot.Indonegeno, data = cp.ind)
+lapply(levels(inds$geno), plot.Indonegeno, data = inds)
 
 #close down all current graphics
 graphics.off()
 
 ################################################################################
 #update cp
-cp <- rbind(cp.Aci, cp.AQ, cp.ind)
+cp <- rbind(AC, AQ, inds)
 row.names(cp) <- c(1:nrow(cp))
 
 lapply(levels(cp$geno), plot.Acionegeno, data = cp[cp$curve == "Aci", ])
@@ -318,3 +318,4 @@ lapply(levels(cp$geno), plot.AQonegeno, data = cp[cp$curve == "AQ", ])
 lapply(levels(cp$geno), plot.Indonegeno, data = cp[cp$curve == "induction", ])
 
 graphics.off()
+
