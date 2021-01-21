@@ -1,36 +1,23 @@
-#Processing cowpea gas exchange data for A/PPFD,  A/Ci,  and one point Vcmax 
-#August update uses a revised fitting tool that corrects the Farquhar Sharkey limitation
+#Processing cowpea gas exchange data for A/PPFD,  A/Ci,  and one point Vcmax
+#light responses,  Aci responses and ci-correction of induction data
+# all dealt with at the level of individual replicates
+#082005nlme....R further process (or in the case of A/PPFD substitute for)
+# these analysesprior to use in diurnal models (082005NaturePlantsdiurnal.R)
 
-#Here:
-#light responses,  Aci responses and ci-correction of induction data at the level of individual replicates
-#and an approach to quality control/understanding the impacts of Vcmax/J limitation changes is developed
-#082005nlme.R further processes (or in the case of A/PPFD substitutes for)
-#outputs from these analyses prior to use in diurnal modelling (082005NaturePlantsdiurnal.R)
+library(here)
 
-rm(list = ls())
-
-library(lattice)
-
-setwd("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_GasExchange/Rdata")
-setwd("~/Downloads")
-
-###############################################
-#Load,  format and clean up steady state dataset
-#removes duplicate datapoints from automated A/ci and light response curves that brought conditions back to initial steady states
-#removes duplicates where more than one rep of induction assays were collected for quality control
-source("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_GasExchange/Rscripts/082005cleanup.R")
+################################################################################
+#Load and clean dataset (cp) and separate data objects for AC, AQ and inds
+source(here("1_scripts_response_curves/082005cleanup.R"))
 
 #a pdf that holds all of the graphical output from analyses below
-pdf("082005summarize.pdf", h = 11, w = 8, paper = "a4")
+pdf(here("output/082005summarize.pdf"), h = 11, w = 8, paper = "a4")
 
-###################################################################
-#establish mean values for operating states at start of A/ci and AQ	
+################################################################################
+#establish mean values for operating states at start of A/ci
 
-#identify Aci data within which ss value should be found
-AC <- cp[cp$curve == "Aci", ]
-#calulate iWUE; why not?
+#calculate iWUE; why not?
 AC$iWUE <- AC$A / AC$gsw
-
 
 #generate a list that can be used to organise outputs
 cpGE <- list(NA)
@@ -38,17 +25,28 @@ cpGE <- list(NA)
 #within this,  a data frame for operating point values
 names(cpGE) <- "op"
 
-pvars <- c("A", "gsw", "Pci", "iWUE", "TleafCnd", "VPDleaf", "Fv.Fm", "PhiPS2", "NPQ", "qP_Fo", "qN_Fo")
+pvars <- c("A", "gsw", "Pci", "iWUE", "TleafCnd", "VPDleaf",
+           "Fv.Fm", "PhiPS2", "NPQ", "qP_Fo", "qN_Fo"
+           )
 
+#function that generates dataframes for output
 cpdf <- function(vars){
 	fcs <- c("plant", "geno", "block", "cult")
-	tdf <- data.frame( matrix(NA, length(levels(cp$plant)), length(c(fcs, vars))) )
+	lp <- levels(cp$plant)
+	tdf <- data.frame(
+	  matrix(NA, length(lp), length(c(fcs, vars)))
+	  )
 	names(tdf) <- c(fcs, vars)
-	tdf$plant <- levels(cp$plant)
-	geno.strings <- unlist(strsplit(levels(cp$plant), split = "_"))
-	tdf$geno <- factor(geno.strings[seq(1, length(geno.strings), 2)], levels = levels(cp$geno))
+	tdf$plant <- lp
+	geno.strings <- unlist(strsplit(lp, split = "_"))
+	tdf$geno <- factor(geno.strings[seq(1, length(geno.strings), 2)],
+	                   levels = levels(cp$geno)
+	                   )
 	tdf$block <- geno.strings[seq(2, length(geno.strings), 2)]
-	tdf$cult <- replace(as.character(tdf$geno), tdf$geno == "Vadenantha"|tdf$geno == "TVNu-1948", "wild")
+	tdf$cult <- replace(as.character(tdf$geno),
+	                    tdf$geno == "Vadenantha"|tdf$geno == "TVNu-1948",
+	                    "wild"
+	                    )
 	tdf$cult <- replace(tdf$cult, tdf$cult != "wild", "cultivar")
 	tdf$cult <- factor(tdf$cult)
 	tdf
@@ -56,64 +54,170 @@ cpdf <- function(vars){
 
 cpGE$op <- cpdf(pvars)
 
-cpGE$op[, pvars] <- data.frame( t(sapply(cpGE$op$plant, function(.){ AC[AC$plant == ., pvars][1, ] })) )
+cpGE$op[, pvars] <- data.frame(t(
+  sapply(cpGE$op$plant, function(.){ AC[AC$plant == ., pvars][1, ] })
+  )
+  )
 
-#fit AQ responses using 011921AQfit.R
-source("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_GasExchange/Rscripts/082005AQfit.R")
-
-AQ <- cp[cp$curve == "AQ", ]
+################################################################################
+#fit AQ responses
+source(here("4_source_scripts_AQ_Aci_Vcmaxt_diurnal/082005AQfit.R"))
 
 AQ.pars <- c("phi", "Asat", "theta", "Rd.AQ")
 
 cpGE$AQ <- cpdf(AQ.pars)
 
-for (i in levels(cpGE$AQ$geno)){
-	par(mfrow = c(4, 2), mar = c(5, 6, 2.5, 1), las = 1)
-
-	for (j in as.numeric(levels(factor(cpGE$AQ$block))) ){
-		AQin <- AQ[AQ$plant == paste(i, j, sep = "_"), ]
-		
-		if (nrow(AQin) > 1){
-			AQin <- AQin[c(1:14), ]#trim out the second 1500 when stomata are closed
-			m.AQin <- AQ.cost.fits(AQin,
-															params = c(phi = 0.05, Asat = 30, theta = 0.75, Rd = 1.9),
-															upp = NA,
-															low = NA,
-															Rd.fixed = F
-															)
-			cpGE$AQ[cpGE$AQ$plant == paste(i, j, sep = "_"), AQ.pars] <- m.AQin$coefs
-			plot.AQfit(m.AQin, xlim = c(0, 2000), ylim = c(-5, 45), phiPSII = TRUE)
-			title(main = paste(i, j, sep = "_"))
-			} else {
-					plot(1, 1, type = "n", axes = FALSE, bty = "n", main = j, xlab = "", ylab = "")
-					}
-}
+doAQfit <- function(AQ, 
+                    params = c(phi = 0.05, Asat = 30, theta = 0.75, Rd = 1.9),
+                    upp = NA,
+                    low = NA,
+                    Rd.fixed = FALSE
+){
+  if (!is.null(AQ)){
+    AQ.cost.fits(AQ,
+                 params = params,
+                 upp = upp,
+                 low = low,
+                 Rd.fixed = Rd.fixed
+    )
+  }
 }
 
-cpGE$AQ
+#pars here is the naming wanted for the coefs, if this differs from 
+mkAQsq <- function(AQfits, pars = NA){
+  
+  #function to extract summary parameters from ACi fits into a dataframe row
+  # and rename as necessary
+  pull.AQpars <- function(AQfit, pars){
+    if (!is.null(AQfit)){
+      out <- AQfit$coefs
+      if (all(!is.na(pars))){
+        names(out) <- pars
+      }
+      out
+    } else { rep(NA, 4) }
+  }
+  
+  AQmat <- t(sapply(AQfits, pull.AQpars, pars = pars))
+  AQdf <- data.frame(apply(AQmat, 2, unlist))
+  AQdf$plant <- row.names(AQdf)
+  merge(cpdf(NULL), AQdf, all.x = TRUE)
+}
 
-#add a column to the AC data that can be used to source Rd as wished
+plotAQfit <- function(){
+  
+}
+
+#function to plot Aci fits as one page per genotype,
+# two panels per plant showing whole fit and intercept region
+plot.AQfit2 <- function(AQfit){
+  if (!is.null(AQfit)){
+  plot.AQfit(AQfit,
+             xlim = c(0, 1600),
+             ylim = c(-5, 55),
+             PhiPSII = TRUE
+  )
+  title(main = AQfit$data$plant[1])
+  plot.AQfit(AQfit,
+             xlim = c(0, 150),
+             ylim = c(-5, 20),
+             PhiPSII = FALSE
+  )
+  title(main = AQfit$data$plant[1])
+  }
+}
+
+plot.AQfit.bygeno <- function(AQfits){
+  for (i in levels(cp$geno)){
+    par(mfrow = c(4, 2), mar = c(5, 6, 2.5, 1), las = 1)
+    lapply(AQfits[grep(i, names(AQfits), value = TRUE)], plot.AQfit2)
+  }
+}
+
+#function to insert blank page in pdf output containing a title
+# (main is an expression or character vector)
+header.page <- function(main){
+  par(mfrow = c(1, 1), mar = c(10, 10, 10, 10))
+  plot(1, 1,
+       type = "n",
+       bty = "n",
+       axes = FALSE,
+       xlab = "",
+       ylab = "",
+       main = main
+  )
+}
+
+
+######
+#ALTHOUGH THE ABOVE IS MORE LONG-WIDED, IT REPLACES THE BELOW
+#for (i in levels(cpGE$AQ$geno)){
+#	par(mfrow = c(4, 2), mar = c(5, 6, 2.5, 1), las = 1)
+#
+#	for (j in as.numeric(levels(factor(cpGE$AQ$block))) ){
+#		AQin <- AQ[AQ$plant == paste(i, j, sep = "_"), ]
+#		
+#		if (nrow(AQin) > 1){
+#			AQin <- AQin[c(1:14), ]#trim out the second 1500 when stomata are closed
+#			m.AQin <- AQ.cost.fits(AQin,
+#															params = c(phi = 0.05, Asat = 30, theta = 0.75, Rd = 1.9),
+#															upp = NA,
+#															low = NA,
+#															Rd.fixed = F
+#															)
+#			cpGE$AQ[cpGE$AQ$plant == paste(i, j, sep = "_"), AQ.pars] <- m.AQin$coefs
+#			plot.AQfit(m.AQin, xlim = c(0, 2000), ylim = c(-5, 45), phiPSII = TRUE)
+#			title(main = paste(i, j, sep = "_"))
+#			} else {
+#					plot(1, 1, type = "n", axes = FALSE, bty = "n", main = j, xlab = "", ylab = "")
+#					}
+#}
+#}
+
+#cpGE$AQ
+
+AQ.list <- by(AQ, AQ$plant, identity)
+
+#first model
+AQfits_no_fixed <- lapply(AQ.list, doAQfit)
+
+#plot this
+header.page(
+  main = expression(italic(A)/PPFD~~responses~~all~~parameters~~estimated)
+  )
+plot.AQfit.bygeno(AQfits_no_fixed)
+
+#summarize
+cpGE$AQ <- mkAQsq(AQfits_no_fixed, AQ.pars)
+
+################################################################################
+#fit Aci responses
+
+#add a column to AC that can be used to source Rd as wished
 AC$Rd.AQ <- AC$plant
-levels(AC$Rd.AQ) == cpGE$AQ$plant#nice
+all(levels(AC$Rd.AQ) == cpGE$AQ$plant)
 levels(AC$Rd.AQ) <- cpGE$AQ$Rd.AQ
 AC$Rd.AQ
 AC$Rd.AQ <- as.numeric(as.character(AC$Rd.AQ))
+AC$Rd.AQ
 
-#and because there are fewer plants than levels for plants
+#there are fewer plants than levels for plants
 length(unique(AC$plant)) == length(levels(AC$plant))
 unique(AC$plant) %in% levels(AC$plant)
+levels(AC$plant) %in% unique(AC$plant)
+#so
 levels(AC$plant) <- replace(levels(AC$plant),
 														!levels(AC$plant) %in% unique(AC$plant),
 														NA
 														)
 
-#fit ACi responses using 081913Acifit12.1.R with all parameters estimated (i.e.,  including gm)
-source("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_GasExchange/Rscripts/072020Acifit12.1.R")
+#Code for Acifit12.1
+source(here("4_source_scripts_AQ_Aci_Vcmaxt_diurnal/072020Acifit12.1.R"))
 
 #This function fits a curve using inputs and returns a fitted curve list object
-#I've moved the indexing and data selection to a separate 'doACfits' function below
-#the goal is to keep all elements of the fit available for subsequent plotting etc.,  by incorporation into lists
-#particular components of that list should then be accessible via apply-type functions
+#As above, the indexing and data selection are in a 'doACfits' function below
+#List output means all elements of the fit are retained in these objects
+#for subsequent plotting etc.
 doACfit <- function(Aci, 
 										Rd.fixed = FALSE, 
 										Gamma.star = NA,
@@ -129,9 +233,10 @@ doACfit <- function(Aci,
 	Pca.op = Aci[1, "Pca"]
 	
 	Rd.guess <- Aci[1, "Rd.AQ"]
-	if (is.na(Rd.guess)) {Rd.guess <- 2}#because Rd must be provided
+	if (is.na(Rd.guess)) {Rd.guess <- 2} #because Rd must be provided
 
-	#generate the input Gamma.star, Gamma.star.fixed, Kco, Kco.fixed, gm, gm.fixed, var.J, stoich
+	#generate the input
+	#Gamma.star, Gamma.star.fixed, Kco, Kco.fixed, gm, gm.fixed, var.J, stoich
 	input.AC <- Acifit.input(Aci, 
 														Rd = Rd.guess,
 														Rd.fixed, 
@@ -160,15 +265,21 @@ doACfit <- function(Aci,
 	input.AC
 }
 
-#function to make a summary of key params from fits... complicated,  but necessary to make a square df
+#function to make a summary of key params from fits... complicated,
+# but necessary to make a square df
 mkACsq <- function(ACfits){
 	
 	#parameters for Aci fits that are useful for summaries
-	AC.pars = c("Vcmax", "J", "TPU", "Rd", "Gamma.star", "Kco", "gm", "A.40", "A.op", "Ls", "Pci.op", "Gamma", "Ac.Aj", "Aj.Ap", "Ac.Ap", "Vcmax.25", "J.25", "TPU.25", "Rd.25", "gm.25")
+	AC.pars = c("Vcmax", "J", "TPU", "Rd", "Gamma.star", "Kco", "gm",
+	            "A.40", "A.op", "Ls", "Pci.op",
+	            "Gamma", "Ac.Aj", "Aj.Ap", "Ac.Ap",
+	            "Vcmax.25", "J.25", "TPU.25", "Rd.25", "gm.25"
+	            )
 	
-	#function to extract summary parameters from ACi fits into a dataframe row
+	#extract summary parameters from ACi fits into a dataframe row
 	pull.ACpars <- function(input.AC, pars){
-		out <- c(input.AC$chosen.mod[, c("Vcmax", "J", "TPU", "Rd", "Gamma.star", "Kco", "gm")], 
+	  core.pars <- c("Vcmax", "J", "TPU", "Rd", "Gamma.star", "Kco", "gm")
+		out <- c(input.AC$chosen.mod[ , core.pars], 
 							input.AC$F_Slimitation, 
 							input.AC$ci.transitions, 
 							input.AC$temperature.normalised
@@ -183,12 +294,23 @@ mkACsq <- function(ACfits){
 	merge(cpdf(NULL), ACdf, all.x = TRUE)
 }
 
-#function to plot Aci fits as one page per genotype,  two panels per plant showing whole fit and Gamma region
+#function to plot Aci fits as one page per genotype,  two panels per plant
+# showing whole fit and Gamma region
 plot.ACfit2 <- function(input.AC){
 
-	plot.Acifit(input.AC, xlim = c(0, 90), ylim = c(-5, 55), PhiPSII = TRUE, F_Slimitation = TRUE)
-	title(main = input.AC$data$plant[1])
-	plot.Acifit(input.AC, xlim = c(0, 20), ylim = c(-5, 20), PhiPSII = FALSE, F_Slimitation = FALSE)
+	plot.Acifit(input.AC,
+	            xlim = c(0, 90),
+	            ylim = c(-5, 55),
+	            PhiPSII = TRUE,
+	            F_Slimitation = TRUE
+	            )
+  title(main = input.AC$data$plant[1])
+	plot.Acifit(input.AC,
+	            xlim = c(0, 20),
+	            ylim = c(-5, 20),
+	            PhiPSII = FALSE,
+	            F_Slimitation = FALSE
+	            )
 	title(main = input.AC$data$plant[1])
 
 	}
@@ -200,14 +322,6 @@ plot.ACfit.bygeno <- function(AC.fits){
 	}
 }
 	
-#function to insert blank page in pdf output containing a title (main is an expression or character vector)
-header.page <- function(main){
-	par(mfrow = c(1, 1), mar = c(10, 10, 10, 10))
-	plot(1, 1, type = "n", bty = "n", axes = FALSE, xlab = "", ylab = "", #empty - just add a header
-		main = main
-	)
-}
-
 #format AC as a list,  broken down by plant
 AC.list <- by(AC, AC$plant, identity)
 
@@ -223,8 +337,11 @@ AC.fits_no_fixed <- lapply(AC.list, doACfit,
 														)
 
 #plot this
-header.page(main = expression(italic(A)/italic(c)[i]~~responses~~all~~parameters~~estimated))
+header.page(
+  main = expression(italic(A)/italic(c)[i]~~responses~~all~~parameters~~estimated)
+  )
 plot.ACfit.bygeno(AC.fits_no_fixed)
+dev.off()
 
 #summarize
 cpGE$AC_no_fixed <- mkACsq(AC.fits_no_fixed)
