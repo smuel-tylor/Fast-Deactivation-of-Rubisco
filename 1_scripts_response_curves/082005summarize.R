@@ -15,7 +15,7 @@ source(here("4_source_scripts_AQ_Aci_Vcmaxt_diurnal/082005AQfit.R"))
 source(here("4_source_scripts_AQ_Aci_Vcmaxt_diurnal/072020Acifit12.1.R"))
 
 #Astar/one-point Vcmax
-source(here("4_source_scripts_AQ_Aci_Vcmaxt_diurnal/072020AstarVcmax.R"))
+source(here("4_source_scripts_AQ_Aci_Vcmaxt_diurnal/082005AstarVcmax.R"))
 
 #specific to the analysis presented
 source(here("4_source_scripts_AQ_Aci_Vcmaxt_diurnal/functions_082005summarize.R"))
