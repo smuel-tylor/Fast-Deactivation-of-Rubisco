@@ -488,34 +488,34 @@ Aci.cost <- function(params, fixed, data, lim, stoich){
 opt.pars <- function(input, p.para){
   
   p.p = unlist(p.para$params)
-	f.p = unlist(p.para$fixed)
-	d.p = p.para$data
-	l.p = p.para$lim
-	upp = rep(Inf, length(p.para$params))
-	low = rep(0, length(p.para$params))
-	stoich = input$stoich
-	
-	#obtain an unbounded estimate using a non-derivative based method
-	#optim(p.p,
-	#		fn = Aci.cost,
-	#		method = "Nelder-Mead",
-	#		#upper = upp, lower = low,
-	#		control = list(maxit = 100000),
-	#		fixed = f.p, data = d.p, lim = l.p, stoich = stoich
-	#		)
-	
-	optim(p.p,
-	      fn = Aci.cost,
-	      fixed = f.p,
-	      data = d.p,
-	      lim = l.p,
-	      stoich = stoich,
-	      method = "L-BFGS-B",
-	      upper = upp, lower = low,
-	      control = list(maxit = 10000)
-	)
-	
-	}
+  f.p = unlist(p.para$fixed)
+  d.p = p.para$data
+  l.p = p.para$lim
+  upp = rep(Inf, length(p.para$params))
+  low = rep(0, length(p.para$params))
+  stoich = input$stoich
+  
+  #obtain an unbounded estimate using a non-derivative based method
+  #optim(p.p,
+  #		fn = Aci.cost,
+  #		method = "Nelder-Mead",
+  #		#upper = upp, lower = low,
+  #		control = list(maxit = 100000),
+  #		fixed = f.p, data = d.p, lim = l.p, stoich = stoich
+  #		)
+  
+  optim(p.p,
+        fn = Aci.cost,
+        fixed = f.p,
+        data = d.p,
+        lim = l.p,
+        stoich = stoich,
+        method = "L-BFGS-B",
+        upper = upp, lower = low,
+        control = list(maxit = 10000)
+  )
+  
+}
 
 #Function taking Acifit.input pre-processed by gen.lim.states
 #and using opt.pars to implement pick.params and Aci.cost,
@@ -528,9 +528,10 @@ Aci.cost.fits <- function(input){
 	
 	#dataframe to hold output for each individual fit
 	cost <- data.frame(matrix(NA, nrow = nrow(lim.states), ncol = 9))
-	names(cost) <- c("convergence", "cost", "Vcmax", "J", "TPU", "Rd",
-	                 "Gamma.star", "Kco", "gm"
-	                 )
+	cst.nms <- c("convergence", "cost", "Vcmax", "J", "TPU", "Rd",
+	             "Gamma.star", "Kco", "gm"
+	             )
+	names(cost) <- cst.nms
 	
 	#loop fitting models and calculating output for all rows in lim.states
 	for (k in 1:nrow(lim.states)){
@@ -538,16 +539,27 @@ Aci.cost.fits <- function(input){
 	  p.para = pick.params(input, lim.states[k, ])
 	  fit <- opt.pars(input, p.para)
 	  
-	  cost[k, "convergence"] = fit$convergence
-	  cost[k, "cost"] = fit$value
-	  
-	  for (l in names(p.para$params)){
-	    cost[k, l] <- fit$par[l]
+	  #0121 added if else here to help get rid of non-converging models 
+	  if (fit$convergence != 0 | !is.list(fit)){
+	    
+	    cost[k, "convergence"] <- 1
+	    cost[k, "cost"] <- 1e12 
+	    cost[k, cst.nms[3:length(cst.nms)]] <- rep(NA, length(cst.nms) - 2)
+	    
+	  } else {
+	    
+	    cost[k, "convergence"] = fit$convergence
+	    cost[k, "cost"] = fit$value
+	    
+	    for (l in names(p.para$params)){
+	      cost[k, l] <- fit$par[l]
 	    }
-	  
-	  for (m in names(p.para$fixed)){
-	    cost[k, m] <- p.para$fixed[m]
+	    
+	    for (m in names(p.para$fixed)){
+	      cost[k, m] <- p.para$fixed[m]
 	    }
+	    
+	  }
 	  
 	  }
 	
@@ -613,7 +625,8 @@ Acifit.admit <- function(input){
 		#Rounding to a sensible accuracy is necessary here to select correctly
 		Wp <- replace(Wp, round(Cp, 4) <= round(Gamma.star[i], 4), Inf)
 		
-		#same, just in case there are any NaNs generated for any of the states
+		#same, just in case there are any NaNs generated for any of the states.
+		#The goal here is to prevent these rows being dropped completely
 		#0121 noticed that these lines were nonsense...
 		#nonsense lines are shown here at right, hashed out
 		Wp <- replace(Wp, is.na(Wp), Inf) #Wp <- replace(Wp, Wp == NA, Inf)
@@ -669,8 +682,9 @@ Acifit.admit <- function(input){
 		#0819 added the following to ensure that failures of pred.states
 		# are counted as non-admissible
 		#This will happen if, e.g. -ve Vcmax, J, or TPU
-		#it therefore isn't an issue if L-BFGS-B is used
-		#and should not affect this code unless op.pars is modified
+		# or non-convergence?? 
+		#It shouldn't generally be an issue if L-BFGS-B is used
+		# with op.pars as specified above
 		cost[i, "admit"] <- replace(cost[i, "admit"],
 		                            is.na(cost[i, "admit"]),
 		                            FALSE
