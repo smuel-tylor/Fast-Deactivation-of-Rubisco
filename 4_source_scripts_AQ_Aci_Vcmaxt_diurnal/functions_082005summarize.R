@@ -130,6 +130,8 @@ doACfit <- function(Aci,
                     gm.fixed = FALSE
 ){
   
+  #0121 added this for troubleshooting purposes
+  print(as.character(Aci$plant[1]))
   A.op = Aci[1, "A"]
   Pci.op = Aci[1, "Pci"]
   Pca.op = Aci[1, "Pca"]
