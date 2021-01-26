@@ -359,7 +359,7 @@ plot.ACfit.bygeno(AC.fits_GammastarKcogm_fixed)
 
 cpGE$AC_GammastarKcogm_fixed <- mkACsq(AC.fits_GammastarKcogm_fixed)
 
-
+################################################################################
 #Asking whether fixing gm (Gammastar & Kco) results in reliable estimation of Rd
 # as well as other params
 header.page(main = expression("Impact of fixing " * italic(g)[m]))
@@ -471,6 +471,7 @@ plot(J ~ as.numeric(geno),
      )
 #no apparent impact on J
 
+################################################################################
 #As a sanity check,  since gm complicates the induction analysis,
 # what happens if gm is fixed to ~Inf?
 #0121 also spotted Rd = TRUE here, and corrected it 
@@ -503,7 +504,7 @@ table(cpGE$AC_GammastarKcogm_fixed$Ac.Aj >
 table(cpGE$AC_GammastarKcoInfgm_fixed$Ac.Aj >
         cpGE$AC_GammastarKcoInfgm_fixed$Pci.op
       )
-#totally switches the limitation states...
+#Switches the limitation states at the operating point to Vcmax rather than J 
 
 header.page(main = expression("Impact of fixing " * italic(g)[m]~~to~~Inf))
 	
@@ -597,21 +598,22 @@ plot.ACfit.bygeno(AC.fits_Infgm_fixed)
 cpGE$AC_Infgm_fixed <- mkACsq(AC.fits_Infgm_fixed)
 
 cpGE$AC_Infgm_fixed
-#no,  Gammastar and Kco do behave better,  but Rd is collapsing
+#No.
+#Gammastar and Kco do behave better,  but Rd is collapsing
 
-#Overall, for current purposes,
-#cpGE$AC_GammastarKcoInfgm_fixed is a reliable description of the data.
+#Overall,
+# cpGE$AC_GammastarKcoInfgm_fixed OR cpGE$AC_GammastarKcogm_fixed
+# could be considered reasonable descriptions of the data.
 
-#It implies Vcmax limitation in the steady state,
-#so induction could be processed assuming minimal impacts of J
-
-##############################
-####I will need to choose which analysis I actually want
-####Noting that there's currently a mistake in 082005NaturePlantsnlmeVcmax
-#However, it would be wise to have an additional analysis including gm
-# (noting that we don't really know how gm behaves during induction). 
-#where since we don't know the actual dynamic behaviour of J and Vcmax but we can reasonably assume Vcmax recovers more slowly, 
-#Vcmax half-time is estimated using only induction values where A<max(A[C]) from cpGE$AC_GammastarKcogm_fixed
+#The version including a fixed estimate of gm is more consistent with
+# most reviewers vision,
+# especially as we are interested in Rubisco at chloroplast-level.
+#This model implies J limitation in the steady state,
+# whereas the infinite gm model predicts Vcmax limitation. 
+#Use of the fixed gm model is therefore more conservative in terms of
+# the duration of Vcmax impacts,
+# and requires setting limits to the period of Vcmax limitation during induction
+# - see 082005NaturePlantsnlmeVcmax.R
 
 ################################################################################
 ################################################################################
@@ -707,7 +709,7 @@ plot.Astar.bygeno(inds.list_GammastarKcogm_fixed_paired,
 									AC.fits_GammastarKcogm_fixed_paired
 									)
 
-#close the pdf
+#close the pdf with all figures for these analyses
 dev.off()
 
 ################################################################################
