@@ -600,8 +600,6 @@ plot.ACfit.bygeno(AC.fits_Infgm_fixed)
 
 cpGE$AC_Infgm_fixed <- mkACsq(AC.fits_GammastarKcoInfgm_fixed)
 
-cpGE$AC_Infgm_fixed <- cpdf(AC.pars)
-
 cpGE$AC_Infgm_fixed
 #no,  Gammastar and Kco do behave better,  but Rd is collapsing
 
