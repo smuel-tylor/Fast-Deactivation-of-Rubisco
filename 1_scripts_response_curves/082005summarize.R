@@ -142,7 +142,6 @@ header.page(
     )
   )
 plot.ACfit.bygeno(AC.fits_no_fixed)
-dev.off()
 
 #summarize
 cpGE$AC_no_fixed <- mkACsq(AC.fits_no_fixed)
@@ -337,7 +336,7 @@ summary(cpGE$AC_GammastarKco_fixed$gm)
 # the median being 4.9-5 in constrained models
 #(noting that the mean is strongly affected by outliers)
 
-#mistkae identified here 0121 - Rd.fixed was set to TRUE, now corrected
+#mistake identified here 0121 - Rd.fixed was set to TRUE, now corrected to FALSE
 AC.fits_GammastarKcogm_fixed <- lapply(AC.list,
 																				doACfit, 
 																				Rd.fixed = FALSE,																
@@ -574,6 +573,10 @@ plot(J ~ as.numeric(geno),
      main = "GammastarKcoInfgm_fixed"
      )
 #no apparent impact on J
+
+######################################
+#NOT WORKING, but when tried to troubleshoot... fine...
+######################################
 
 #If gm = Inf,  can Kco, Gammastar & Rd all be estimated from the data?
 AC.fits_Infgm_fixed <- lapply(AC.list,
