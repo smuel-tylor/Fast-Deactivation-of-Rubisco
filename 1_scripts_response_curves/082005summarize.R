@@ -574,10 +574,6 @@ plot(J ~ as.numeric(geno),
      )
 #no apparent impact on J
 
-######################################
-#NOT WORKING, but when tried to troubleshoot... fine...
-######################################
-
 #If gm = Inf,  can Kco, Gammastar & Rd all be estimated from the data?
 AC.fits_Infgm_fixed <- lapply(AC.list,
 															doACfit, 
@@ -598,7 +594,7 @@ header.page(
 
 plot.ACfit.bygeno(AC.fits_Infgm_fixed)
 
-cpGE$AC_Infgm_fixed <- mkACsq(AC.fits_GammastarKcoInfgm_fixed)
+cpGE$AC_Infgm_fixed <- mkACsq(AC.fits_Infgm_fixed)
 
 cpGE$AC_Infgm_fixed
 #no,  Gammastar and Kco do behave better,  but Rd is collapsing
