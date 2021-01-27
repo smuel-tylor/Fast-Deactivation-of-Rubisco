@@ -33,7 +33,7 @@ cp$cult <- replace(cp$geno,
                    )
 cp$cult <- replace(cp$cult, cp$cult != "wild", "cultivar")
 
-#make these into factors
+#make factors
 g.levs <- c("V. adenantha", "TVNu-1948", "IT86D-1010", "IT82E-16")
 
 c.levs <- c("cultivar", "wild")
