@@ -105,7 +105,7 @@ plot.AQfit2 <- function(AQfit){
 }
 
 plot.AQfit.bygeno <- function(AQfits){
-  for (i in levels(cp$geno)){
+  for (i in levels(AQ$geno)){
     par(mfrow = c(4, 2), mar = c(5, 6, 2.5, 1), las = 1)
     lapply(AQfits[grep(i, names(AQfits), value = TRUE)], plot.AQfit2)
   }
@@ -220,7 +220,7 @@ plot.ACfit2 <- function(input.AC){
 }
 
 plot.ACfit.bygeno <- function(AC.fits){
-  for (i in levels(cp$geno)){
+  for (i in levels(AC$geno)){
     par(mfrow = c(4, 2), mar = c(5, 6, 2.5, 1), las = 1)
     lapply(AC.fits[grep(i, names(AC.fits), value = TRUE)], plot.ACfit2)
   }
