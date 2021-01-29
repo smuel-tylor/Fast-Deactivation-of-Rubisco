@@ -2,7 +2,7 @@
 #This script: half times for ActivationState
 #This is a separate dataset from the gas exchange, so factor order and naming
 # is adjusted to be parallel with those analyses.
-#0121 updated to allow for use with R 4.O and here()
+#0121 updated to allow for use with R 4.x and here()
 #0121 revised the input .csv to remove the need for significant formatting work
 # previously done in this script
 
@@ -14,17 +14,8 @@ library(nlme)
 ################################################################################
 #bring in data and tidy
 
-#setwd("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_Biochemistry/Cowpea Time-Lapse Assays/Rmodelfitting")
-
 Vutl <- read.csv(here("data/RIPE_20210121_cowpeaAS.csv"))
 str(Vutl)
-#update naming to be consistent with other analyses
-#not needed because of revised dataset formatting
-#Vutl$Genotype <- factor(replace(as.character(Vutl$Genotype),
-#																Vutl$Genotype == "Adenantha",
-#																"Vadenantha"
-#																)
-#												)
 
 #set up factors, as needed in R 4.x
 #make factors
@@ -38,10 +29,6 @@ p.levs <- c(p.levs, recursive = TRUE)
 
 Vutl$plant <- factor(Vutl$plant, levels = p.levs)
 
-#code the individual curves to be uniquely identifiable
-#0121 not needed because of data reformat
-#Vutl$Replicate.ST <- factor(paste(Vutl$Genotype, Vutl$Replicate, sep = "_"))
-#Vutl$time.s <- Vutl$time * 60
 Vutl$time.s <- Vutl$time * 60
 
 #pad out the missing values in each set of times*plant
@@ -116,19 +103,6 @@ Vutl$geno
 
 #looksee
 xyplot(ActivationState ~ time.s | plant, data = Vutl)
-
-##the below defunct in R 4.x,
-##fix all the relevant factors by exporting this dataset and re-reading
-##not actually different from previously dated versions of the same file, but changing the name here to avoid confusion
-##write.csv(Vutl, "Vu_timelapse_combined_082005_square.csv", row.names = FALSE)
-##Vutl <- read.csv("Vu_timelapse_combined_082005_square.csv")
-
-##update genotype order
-##Vutl$Genotype <- factor(Vutl$Genotype,
-##												levels = c("Vadenantha", "TVNu-1948", "IT82E-16", "IT86D-1010")
-##												)
-##to make everything run smoothly, the dataframe now needs to be reordered to match this!
-##Vutl<-Vutl[order(Vutl$Genotype), ]
 
 ################################################################################
 ################################################################################
@@ -415,4 +389,3 @@ save(Vutl.nlme4,
      Vutl.noAdb,
      file=here("output/082005NaturePlantsnlmeActivationState.Rdata")
 )
-
