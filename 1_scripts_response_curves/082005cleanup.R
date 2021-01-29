@@ -47,6 +47,11 @@ cp$block <- factor(cp$block)
 cp$plant <- factor(paste(cp$geno, cp$block, sep = "_"))
 levels(cp$plant)
 
+p.levs <- c(sapply(g.levs, grep, x = unique(cp$plant), value = TRUE))
+p.levs <- c(p.levs, recursive = TRUE)
+
+cp$plant <- factor(cp$plant, levels = p.levs)
+levels(cp$plant)
 ################################################################################
 #preliminary data cleaning
 
