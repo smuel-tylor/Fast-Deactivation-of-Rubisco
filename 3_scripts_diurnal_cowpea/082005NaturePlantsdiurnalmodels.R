@@ -37,7 +37,9 @@ tau.d.Vc <- tau.down(
 )
 
 d_in <- data.frame(
-  geno = c("V. adenantha",  "TVNu-1948",  "IT82E-16",  "IT86D-1010"),
+  geno = levels(Vutl$geno),
+  #In some intermediate versions, I had genotypes in a different order!
+  #c("V. adenantha",  "TVNu-1948",  "IT82E-16",  "IT86D-1010"),
   phi = AQ.fixed[grep("phi", rownames(AQ.fixed)), "Est"],
   Asat = AQ.fixed[grep("Asat", rownames(AQ.fixed)), "Est"],
   theta = AQ.fixed[grep("theta", rownames(AQ.fixed)), "Est"],
