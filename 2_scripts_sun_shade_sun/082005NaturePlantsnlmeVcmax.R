@@ -22,7 +22,6 @@ str(ilGKg)
 
 ################################################################################
 ################################################################################
-
 #Identify the Vcmax limited portion of the induction
 #The only effective way is A < Aj | Ci
 
@@ -190,7 +189,8 @@ str(ilGKg.df)
 ##ilGKg.df <- read.csv("Vu_timelapse_gasexchange_082005_square.csv")
 
 ##update genotype order
-##ilGKg.df$geno <- factor(ilGKg.df$geno, levels = c("Vadenantha", "TVNu-1948", "IT82E-16", "IT86D-1010"))
+##ilGKg.df$geno <- factor(ilGKg.df$geno, levels = c("Vadenantha", "TVNu-1948",
+##                                                    "IT82E-16", "IT86D-1010"))
 
 #to make everything run smoothly,  order ilGKg.df by geno
 ilGKg.df <- ilGKg.df[order(ilGKg.df$geno), ]
@@ -219,7 +219,6 @@ xyplot(Astar ~ Vcmax.t | plant, data = ilGKg.df)
 
 ################################################################################
 ################################################################################
-
 #Timeseries analyses using nlme
 
 #Noting that this is only valid for the initial post-shade phase:
@@ -350,7 +349,8 @@ anova(ind.nlme4, ind.nlme6)
 anova(ind.nlme6)
 #the Vcmax.i*geno effect is getting a bit marginal
 intervals(ind.nlme6)
-plot(augPred(ind.nlme6, primary = ~induction.s, level = 0:1))
+#This plot won't work
+#plot(augPred(ind.nlme6, primary = ~induction.s, level = 0:1))
 #but overall, this looks appropriate
 
 #Quickly check if removing the genotype*Vcmax.i term results in a worse fit
@@ -367,13 +367,19 @@ anova(ind.nlme6, ind.nlme7)
 #The change is very marginal - ind.nlme7 is a slightly better model by AIC
 #despite a slightly lower (not significantly so) likelihood
 intervals(ind.nlme7)
-plot(augPred(ind.nlme7, primary = ~induction.s, level = 0:1))
+#as above, this plot fails...
+#plot(augPred(ind.nlme7, primary = ~induction.s, level = 0:1))
 #This plot confirms that the fixed effect of genotype is having little influence
 anova(ind.nlme7)
 
-#0121 The below is therefore modified to reflect ind.nlme7 as the best model
+#0121 The below is modified to reflect ind.nlme7 as the best model
+# instead of ind.nlme6
 ################################################################################
-#produce a nicer plot of this to match figures in ActivationState
+################################################################################
+#Plots and output
+
+################################################################################
+#produce a plot equivalent to the augPred function
 t.smth <- c(1200:1800)
 p.smth <- as.character(unique(ilGKg.df.ind[ , "plant"]))
 g.smth <- sapply(strsplit(p.smth, "_"), function(.){ .[1] })
@@ -539,7 +545,7 @@ fixVcmax <- intervals(ind.nlme7)$fixed[ ,2]
               #c(fixef(ind.nlme7)[1],
               #fixef(ind.nlme7)[1] + fixef(ind.nlme7)[c(2:4)]
               #)
-Vcind.fixed <- cbind(fixVcmax, fixVcmax + cis %*% cbind(-1, 1))#[c(1:4)] %*% cbind(-1, 1))
+Vcind.fixed <- cbind(fixVcmax, fixVcmax + cis %*% cbind(-1, 1)) #[c(1:4)] %*% cbind(-1, 1))
 
 #Vcind.fixed <- rbind(
 #  cbind(fixVcmax,
@@ -555,6 +561,9 @@ Vcind.fixed <- as.data.frame(Vcind.fixed)
 names(Vcind.fixed) <- c("Est", "lower", "upper")
 Vcind.fixed
 
+################################################################################
+################################################################################
+#Save outputs
 
 save(in7, ind.nlme7, Vcind.fixed, ilGKg.df,
      file = here("output/082005NaturePlantsnlmeVcmax.Rdata")
