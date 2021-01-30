@@ -118,20 +118,13 @@ ilGKg.df <- ilGKg.df[ilGKg.df$induction.s >= -120 &
                        ilGKg.df$induction.s <= 1200 + 300, ]
 
 xyplot(Astar*5 + Vcmax.t ~ induction.s | plant, data = ilGKg.df)
-##these lines defunct because extra genotypes no longer included in input
-#and get rid of genotypes not used for the Rubisco activation state work
-#levels(ilGKg.df$geno)
-#levels(ilGKg.df$geno)[c(5, 6)] <- NA
-#ilGKg.df <- ilGKg.df[!is.na(ilGKg.df$geno), ]
 
-#retain only the columns actually needed for the model
-#to ensure an na.omit below works OK (because FLR values are usually all NA)
+#Retain only the columns actually needed for the model
+# to ensure an na.omit below works OK (because FLR values are usually all NA)
 ilGKg.df <- ilGKg.df[ , c("induction.s", "geno", "plant", "Astar", "Vcmax.t")]
 
-#Make the dataset square so that resampling for CI will work
-##- Pad out the missing values in each set of TimePoints*Replicate.ST
-#Vutl$Replicate.ST.s <- paste(Vutl$Replicate.ST, Vutl$TimePoint.s, sep = "_")
-#a vector that gives what would be expected in a square dataset
+#Make the dataset square so that resampling for CI will work.
+#Vectors that give what would be expected in a square dataset:
 Ts <- unique(ilGKg.df$induction.s)
 pl <- unique(ilGKg.df$plant)
 E.plTs <- paste(rep(pl, each = length(Ts)),
@@ -179,19 +172,6 @@ rm(ilGKg.df2, Ts, pl, E.plTs)
 str(ilGKg.df)
 #this looks correct
 
-###0121 modifications made below to adapt for R 4.x
-#re-writing the file is no longer appropriate because factors curated 'manually'
-# and unnecessary genotypes no longer imported in raw data
-##fix all the relevant factors by exporting this dataset and re-reading
-##not actually different from previously dated versions of the same file, but
-## changing the name here to avoid confusion
-##write.csv(ilGKg.df, "Vu_timelapse_gasexchange_082005_square.csv",row.names=FALSE)
-##ilGKg.df <- read.csv("Vu_timelapse_gasexchange_082005_square.csv")
-
-##update genotype order
-##ilGKg.df$geno <- factor(ilGKg.df$geno, levels = c("Vadenantha", "TVNu-1948",
-##                                                    "IT82E-16", "IT86D-1010"))
-
 #to make everything run smoothly,  order ilGKg.df by geno
 ilGKg.df <- ilGKg.df[order(ilGKg.df$geno), ]
 
@@ -229,8 +209,6 @@ xyplot(Astar ~ Vcmax.t | plant, data = ilGKg.df)
 #I need to add appropriate time sequences & time sequence factors to the data
 #as noted above: unlike nlmeActivationState.R,  I cannot model the 0-1200 period
 # of shade so code here extracts that data as ilGKg.df.ind
-#ilGKg.df$s.0 <- ifelse(ilGKg.df$induction.s < 0,  1,  0)
-#Vutl$s.d <- ifelse(Vutl$TimePoint.s < 0 | Vutl$TimePoint.s >= 1200,  0,  1)
 ilGKg.df$s.a <- ifelse(ilGKg.df$induction.s > 1260,  1,  0) #fails if >=1260!
 ilGKg.df.ind <- ilGKg.df[ilGKg.df$s.a == 1, ]
 
