@@ -10,24 +10,12 @@ library(here)
 library(lattice)
 library(nlme)
 
-#setwd("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_GasExchange/Rdata")
-#setwd("~/Downloads")
-
 load(here("output/082005summarize.Rdata"))
 objects()
 
 #check factors in AQ
 AQ$geno
 AQ$plant
-
-##this defunct because of changesin input data
-#remove the two genotypes not being used in this analysis
-#levels(AQ$geno)[grep("KVu 379-P1", levels(AQ$geno))] <- NA
-#levels(AQ$geno)[grep("Iron&Clay", levels(AQ$geno))] <- NA
-#AQ <- AQ[!is.na(AQ$geno),]
-#fix the factors
-#AQ$geno <- factor(as.character(AQ$geno), levels = c("Vadenantha",  "TVNu-1948",  "IT82E-16",  "IT86D-1010"))
-#AQ$plant <- factor(as.character(AQ$plant), levels = levels(unique(AQ$plant)))
 
 #To get the plots etc. in a nice order
 AQ <- AQ[order(AQ$plant), ]
@@ -75,9 +63,9 @@ plot(AQ.nls, plant ~ resid(.),  abline  =  0)
 
 AQ.nlme <- nlme(AQ.nlsList)
 AQ.nlme
-#unsurprisingly , basedon the nlsList object,
-#random effects are reasonably independent,
-#but I need to include fixed effects of genotype
+#Unsurprisingly, based on the nlsList object,
+# random effects are reasonably independent,
+# but I need to include fixed effects of genotype
 AQ.nlme2 <- update(
   AQ.nlme,
   fixed = phi + Asat + theta + Rd ~ geno,
@@ -143,8 +131,6 @@ nd.AQ <- data.frame(
     levels = levels(AQ$plant)
   )
 )
-#nd.AQ$plant <- factor(nd.AQ$plant, levels = levels(AQ$plant))
-#nd.AQ$geno <- factor(nd.AQ$geno, levels = levels(AQ$geno))
 
 pred.AQ.nlme2 <- data.frame(
   A.geno = predict(AQ.nlme2, newdata = nd.AQ, level = 0),
