@@ -19,7 +19,7 @@ str(Vutl)
 
 #set up factors, as needed in R 4.x
 #make factors
-g.levs <- c("V. adenantha", "TVNu-1948", "IT86D-1010", "IT82E-16")
+g.levs <- c("V. adenantha", "TVNu-1948", "IT82E-16", "IT86D-1010")
 
 Vutl$geno <- factor(Vutl$geno, levels = g.levs)
 Vutl$block <- factor(Vutl$block)
