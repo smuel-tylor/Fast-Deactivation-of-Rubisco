@@ -2,18 +2,14 @@
 #0121, updated to work with R 4.x, here() and for style
 # also reflects corrections made in nlmeVcmax.R, i.e. simpler model for Vcmax
 
-#rm(list=ls())
 library(here)
 library(nlme)
 
-#setwd("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_GasExchange/Rdata")
 load(here("output/082005NaturePlantsnlmeLightResponses.Rdata"))
 load(here("output/082005NaturePlantsnlmeVcmax.Rdata"))
-#load("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_Biochemistry/Cowpea Time-Lapse Assays/Rmodelfitting/082005NaturePlantsnlmeActivationState.Rdata")
 load(here("output/082005NaturePlantsnlmeActivationState.Rdata"))
 
 #source code for diurnal simulation
-#source("C:/Users/taylor53/Lancaster University/Carmo Silva, Elizabete - RIPE_Lancaster/Cowpea_GasExchange/Rscripts/082005predictdiurnal.R")
 source(here("4_source_scripts_AQ_Aci_Vcmaxt_diurnal/082005predictdiurnal.R"))
 
 #need to run models with alternative parameterisations for the four genotypes
@@ -38,8 +34,6 @@ tau.d.Vc <- tau.down(
 
 d_in <- data.frame(
   geno = levels(Vutl$geno),
-  #In some intermediate versions, I had genotypes in a different order!
-  #c("V. adenantha",  "TVNu-1948",  "IT82E-16",  "IT86D-1010"),
   phi = AQ.fixed[grep("phi", rownames(AQ.fixed)), "Est"],
   Asat = AQ.fixed[grep("Asat", rownames(AQ.fixed)), "Est"],
   theta = AQ.fixed[grep("theta", rownames(AQ.fixed)), "Est"],
