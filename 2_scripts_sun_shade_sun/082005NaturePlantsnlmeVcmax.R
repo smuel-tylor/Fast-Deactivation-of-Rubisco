@@ -18,7 +18,8 @@ objects()
 # inds.list_GammastarKcogm_fixed_paired
 # This affected the nlme section and the output from that, but not the AC.j.
 ilGKg <- inds.list_GammastarKcogm_fixed_paired
-str(ilGKg)
+#commenting this to stop masses of console output when sourced...
+#str(ilGKg)
 
 ################################################################################
 ################################################################################
