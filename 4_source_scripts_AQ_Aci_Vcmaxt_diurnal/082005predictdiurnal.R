@@ -12,8 +12,9 @@ if (!exists("AQ.form", mode = "function")) {
 #Af = final A from induction fit
 #Ai = initial A from induction fit
 #shade.s = duration of imposed shade in seconds
+#0221 modified as part of revisions to reflect decline to Ai, rather than 0
 tau.down <- function(Af, Ai, shade.s){
-  -shade.s / log(Ai / Af)
+  shade.s / log(-(Ai - Af))
 }
 
 #Diurnal model used with Zhu et al 2006 PPFD simulations

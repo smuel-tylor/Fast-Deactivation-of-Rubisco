@@ -33,7 +33,7 @@ tau.d.Vc <- tau.down(
 )
 
 d_in <- data.frame(
-  geno = levels(Vutl$geno),
+  geno = levels(Vutl.noAdb$geno),
   phi = AQ.fixed[grep("phi", rownames(AQ.fixed)), "Est"],
   Asat = AQ.fixed[grep("Asat", rownames(AQ.fixed)), "Est"],
   theta = AQ.fixed[grep("theta", rownames(AQ.fixed)), "Est"],
