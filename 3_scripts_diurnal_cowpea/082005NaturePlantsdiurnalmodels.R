@@ -85,7 +85,9 @@ do.diurnal <- function(pars, light, down, up){
 summary.dmods <- function(dmod){
   cum.nolag <- sum(dmod[ , "Aft"], na.rm = TRUE) / 1000 #mmol/m2d 
   cum.Rubisco <- sum(dmod[ , "predict"], na.rm = TRUE) / 1000 #mmol/m2d
-  perc.diff <- 100 * ((cum.nolag/cum.Rubisco) - 1)
+  #0321 modified in response to reviewer comments and
+  #for consistency with Taylor & Long 2017
+  perc.diff <- 100 * (1 - (cum.Rubisco / cum.nolag))
   
   c(cum.nolag = cum.nolag,
     cum.Rubisco = cum.Rubisco,
