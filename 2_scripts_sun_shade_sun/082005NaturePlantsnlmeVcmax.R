@@ -226,14 +226,33 @@ summary(ind.nlsList)
 plot(ind.nlsList,  plant ~ resid(.),  abline  =  0 )
 plot(intervals(ind.nlsList))
 #As you might anticipate from noisy data,
-# some really poorly constrained estimates of the coefs 
+# some really poorly constrained estimates of the coefs
+
+#0321 - remove IT82E-16_2 because it has such
+# a large error - problematic in terms of homoskedasticity
+ilGKg.df.ind_noIT2 <- ilGKg.df.ind[ilGKg.df.ind$plant != "IT82E-16_2", ]
+levels(ilGKg.df.ind_noIT2$plant)[
+  levels(ilGKg.df.ind_noIT2$plant) == "IT82E-16_2"
+  ] <- NA
+
+ind.nlsList2 <- nlsList(
+  Vcmax.t ~ (Vcmax.f - (Vcmax.f - Vcmax.i) *
+               exp( -(induction.s - 1200) / tau.a)) | plant,
+  start = c(Vcmax.i = 60, Vcmax.f = 170, tau.a = 120),
+  data = ilGKg.df.ind_noIT2,
+  na.action = na.exclude
+)
+
+summary(ind.nlsList2)
+plot(ind.nlsList2,  plant ~ resid(.),  abline  =  0 )
+plot(intervals(ind.nlsList2))
 
 #Some level of pooling will help keep residuals homoskedastic and normal.
 #This model is totally pooled, i.e., under-parameterised.
 ind.nls <- nls(
   Vcmax.t ~ (Vcmax.f - (Vcmax.f - Vcmax.i) * exp(-(induction.s - 1200) / tau.a)),
   start = c(Vcmax.i = 60, Vcmax.f = 170, tau.a = 120),
-  data = ilGKg.df.ind, na.action = na.exclude
+  data = ilGKg.df.ind_noIT2, na.action = na.exclude
   )
 
 summary(ind.nls)
@@ -246,7 +265,7 @@ plot(ind.nls,  plant ~ resid(.),  abline  =  0 )
 
 #build a random effects model starting from the over-parameterised ind.nlsList
 #have to boost the iterations a lot here to force this to work
-ind.nlme <- nlme(ind.nlsList, control = list(maxIter = 1000, msMaxIter = 1000))
+ind.nlme <- nlme(ind.nlsList2, control = list(maxIter = 1000, msMaxIter = 1000))
 ind.nlme
 #too many random effects...
 plot(ranef(ind.nlme))
@@ -260,7 +279,7 @@ ind.nlme2 <- update(ind.nlme,
                               fixef(ind.nlme)[3], 0, 0, 0
                               )
                     )
-#works, with a warning about singular convergence
+#works, with a warning about non-convergence
 anova(ind.nlme, ind.nlme2)
 #this is a bad step... AIC increases
 anova(ind.nlme2)
@@ -360,14 +379,14 @@ anova(ind.nlme7)
 ################################################################################
 #produce a plot equivalent to the augPred function
 t.smth <- c(1200:1800)
-p.smth <- as.character(unique(ilGKg.df.ind[ , "plant"]))
+p.smth <- as.character(unique(ilGKg.df.ind_noIT2[ , "plant"]))
 g.smth <- sapply(strsplit(p.smth, "_"), function(.){ .[1] })
 nd.Vc <- data.frame(induction.s = rep(t.smth, length(p.smth)), 
                     geno = rep(g.smth, each = length(t.smth)), 
                     plant = rep(p.smth, each = length(t.smth))
 )
-nd.Vc$plant <- factor(nd.Vc$plant, levels = levels(ilGKg.df.ind$plant))
-nd.Vc$geno <- factor(nd.Vc$geno, levels = levels(ilGKg.df.ind$geno))
+nd.Vc$plant <- factor(nd.Vc$plant, levels = levels(ilGKg.df.ind_noIT2$plant))
+nd.Vc$geno <- factor(nd.Vc$geno, levels = levels(ilGKg.df.ind_noIT2$geno))
 
 pred.ind.nlme7 <- data.frame(
   Vc.geno = predict(ind.nlme7, newdata = nd.Vc, level = 0), 
@@ -378,7 +397,7 @@ pred.ind.nlme7 <- data.frame(
   )
 
 fhds <- c("plant", "induction.s", "Vcmax.t")
-facs.ind.nlme7 <- ilGKg.df.ind[, fhds]
+facs.ind.nlme7 <- ilGKg.df.ind_noIT2[, fhds]
 pred.ind.nlme7 <- merge(pred.ind.nlme7, facs.ind.nlme7, all.x = TRUE)
 
 get_rep_list <-	function(geno, p.all){
@@ -461,7 +480,7 @@ in7 <- predict(ind.nlme7,
 in7 <- data.frame(nd, Vcmax.t = in7)
 par(mfrow = c(1, 1), mar = c(5, 5, 5, 5))
 plot(Vcmax.t ~ induction.s,
-     data = ilGKg.df[ilGKg.df$induction.s > 1260, ], 
+     data = ilGKg.df[ilGKg.df$induction.s > 1260 & ilGKg.df$plant != "IT82E-16_2", ], 
      las = 1,
      pch = 21,
      col = NULL,
@@ -544,6 +563,10 @@ Vcind.fixed
 ################################################################################
 #Save outputs
 
-save(in7, ind.nlme7, Vcind.fixed, ilGKg.df,
+save(in7,
+     ind.nlsList, #added 0321 to check outcome at diurnal scale
+     ind.nlme7,
+     Vcind.fixed,
+     ilGKg.df,
      file = here("output/082005NaturePlantsnlmeVcmax.Rdata")
      )

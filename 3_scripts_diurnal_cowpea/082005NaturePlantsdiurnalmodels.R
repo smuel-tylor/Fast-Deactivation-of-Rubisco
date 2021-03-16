@@ -122,7 +122,9 @@ summ.dmods <- data.frame(
 )
 summ.dmods$model <- factor(summ.dmods$model, levels = mnms)
 
-write.csv(summ.dmods,here("output/082005NaturePlantsdiurnalmodels.csv"))
+write.csv(summ.dmods,here("output/082005NaturePlantsdiurnalmodels.csv"),
+          row.names = FALSE
+          )
 
 #Getting means and CI across genotypes
 

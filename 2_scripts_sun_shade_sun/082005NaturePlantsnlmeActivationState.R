@@ -258,6 +258,12 @@ plot(Vutl.nlme4, plant~resid(.))
 anova(Vutl.nlme4)
 intervals(Vutl.nlme4)
 
+#get exact p-values
+ao <- anova(Vutl.nlme4)
+cbind(row.names(ao),
+      pf(ao$'F-value', ao$numDF, ao$denDF, lower.tail = FALSE)
+)
+
 ################################################################################
 #produce a nice plot of this,
 # since the augPred function seems not to work for this one
@@ -305,7 +311,7 @@ plot_rep <-	function(p.rep){
   plot(1, 1,
        xlim = c(-120, 2400),
        ylim = c(20, 100),
-       xlab = "time from start of shade (s)",
+       xlab = "time from end of shade (s)", #"time from start of shade (s)",
        ylab = expression(italic(S)*" (%)"),
        main = ordp$plant[1],
        type = "n",
@@ -313,7 +319,8 @@ plot_rep <-	function(p.rep){
   )
   axis(side = 1,
        at = seq(0, 2400, 600),
-       las = 1)#, labels = rep("", length(seq(0, 2400, 300))))
+       labels = seq(0, 2400, 600) - 1200, #set axis origin to end of shade
+       las = 1) 
   axis(side = 2,
        at = seq(0, 100, 20),
        las = 1)#, labels = rep("", length(seq(0, 100, 20))))
@@ -383,7 +390,8 @@ AS.fixed
 ################################################################################
 #save objects
 
-save(Vutl.nlme4,
+save(Vutl.nlsList2,#added 0321 so I can check diurnal outcome at over-fitted level
+     Vutl.nlme4,
      pred.Vutl.nlme4,
      AS.fixed,
      Vutl.noAdb,
