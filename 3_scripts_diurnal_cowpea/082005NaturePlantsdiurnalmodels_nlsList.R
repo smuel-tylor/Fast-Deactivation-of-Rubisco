@@ -160,9 +160,11 @@ fixefci <- function(model, nlev){
 
 me.diurnal.if <- lme(perc.diff ~ model, random = ~1 | geno, data = summ.dmods.if)
 fixefci(me.diurnal.if, nlev = 4)
+anova(me.diurnal.if)
 
 me.diurnal.if2 <- lme(foregone ~ model, random = ~1 | geno, data = summ.dmods.if)
 fixefci(me.diurnal.if2, nlev = 4)
+anova(me.diurnal.if2)
 
 #to compare cumulatives, need to treat cum.nolag as a model for comparison
 cum1.if <- summ.dmods.if[c(1:4), c(1:3)]
@@ -173,5 +175,6 @@ cum.if<-rbind(cum1.if, cum2.if)
 
 me.diurnal.if3 <- lme(cum ~ model, random = ~1 | geno, data = cum.if)
 fixefci(me.diurnal.if3, nlev = 5)
+anova(me.diurnal.if3)
 
 save.image(here("output/082005NaturePlantsdiurnalmodels_nlsList.Rdata"))
