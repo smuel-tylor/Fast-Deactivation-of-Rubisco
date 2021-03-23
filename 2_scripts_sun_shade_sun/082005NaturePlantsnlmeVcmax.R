@@ -228,31 +228,32 @@ plot(intervals(ind.nlsList))
 #As you might anticipate from noisy data,
 # some really poorly constrained estimates of the coefs
 
-#0321 - remove IT82E-16_2 because it has such
-# a large error - problematic in terms of homoskedasticity
-ilGKg.df.ind_noIT2 <- ilGKg.df.ind[ilGKg.df.ind$plant != "IT82E-16_2", ]
-levels(ilGKg.df.ind_noIT2$plant)[
-  levels(ilGKg.df.ind_noIT2$plant) == "IT82E-16_2"
-  ] <- NA
+#0321 - remove IT8D-1010_9 and V.adenantha_8 because of high residual variance
+# -problematic in terms of homoskedasticity
+# -also in terms of the basic model because some early data exceed the asymptote
+ilGKg.df2 <- ilGKg.df.ind[ilGKg.df.ind$plant != "IT86D-1010_9" &
+                                     ilGKg.df.ind$plant != "V. adenantha_8", ]
 
 ind.nlsList2 <- nlsList(
   Vcmax.t ~ (Vcmax.f - (Vcmax.f - Vcmax.i) *
                exp( -(induction.s - 1200) / tau.a)) | plant,
   start = c(Vcmax.i = 60, Vcmax.f = 170, tau.a = 120),
-  data = ilGKg.df.ind_noIT2,
+  data = ilGKg.df2,
   na.action = na.exclude
 )
 
 summary(ind.nlsList2)
 plot(ind.nlsList2,  plant ~ resid(.),  abline  =  0 )
 plot(intervals(ind.nlsList2))
+#note that parameters are still not always clearly identifiable
+# Vcmax.f anf tau.a are poorly constrained where induction was shallow
 
 #Some level of pooling will help keep residuals homoskedastic and normal.
 #This model is totally pooled, i.e., under-parameterised.
 ind.nls <- nls(
   Vcmax.t ~ (Vcmax.f - (Vcmax.f - Vcmax.i) * exp(-(induction.s - 1200) / tau.a)),
   start = c(Vcmax.i = 60, Vcmax.f = 170, tau.a = 120),
-  data = ilGKg.df.ind_noIT2, na.action = na.exclude
+  data = ilGKg.df2, na.action = na.exclude
   )
 
 summary(ind.nls)
@@ -267,11 +268,11 @@ plot(ind.nls,  plant ~ resid(.),  abline  =  0 )
 #have to boost the iterations a lot here to force this to work
 ind.nlme <- nlme(ind.nlsList2, control = list(maxIter = 1000, msMaxIter = 1000))
 ind.nlme
-#too many random effects...
+#this looks OK...
+
 plot(ranef(ind.nlme))
-#No obvious way, based on this plot, to structure them.
-#So, incorporate fixed effects of genotype to see if this helps identify
-# unnecessary random effects
+#No obvious structure, based on this plot
+# incorporate and test for fixed effects of genotype
 ind.nlme2 <- update(ind.nlme,
                     fixed = Vcmax.i + Vcmax.f + tau.a ~ geno,
                     start = c(fixef(ind.nlme)[1], 0, 0, 0,
@@ -281,13 +282,11 @@ ind.nlme2 <- update(ind.nlme,
                     )
 #works, with a warning about non-convergence
 anova(ind.nlme, ind.nlme2)
-#this is a bad step... AIC increases
+#this is a bad step... AIC increases, but we need to know about genotype effects
 anova(ind.nlme2)
-#This indicates that Vcmax.i may be the only important fixed effect.
-#Can certainly try dropping tau.a as a genotype-level fixed effect
-# because it clearly isn't differentiating
+#This indicates that dropping tau.a as a genotype-level fixed effect makes sense
 ind.nlme3 <- update(ind.nlme,
-										fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a~1),
+										fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
 										start = c(fixef(ind.nlme)[1], 0, 0, 0,
 															fixef(ind.nlme)[2], 0, 0, 0,
 															fixef(ind.nlme)[3]
@@ -299,13 +298,13 @@ anova(ind.nlme, ind.nlme3)
 
 pairs(ind.nlme3)
 anova(ind.nlme3)
-#looks like all fixef are reasonable here, though Vcmax.f.geno is marginal
+#looks like all fixef are reasonable here
 
-#Is it reasonable to drop some of the random effects?
+#Is it reasonable to drop any of the random effects?
 
 #drop tau.a as a rep-by-rep random effect
 ind.nlme4 <- update(ind.nlme,
-										fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a~1),
+										fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
 										start = c(fixef(ind.nlme)[1], 0, 0, 0,
 															fixef(ind.nlme)[2], 0, 0, 0,
 															fixef(ind.nlme)[3]
@@ -315,7 +314,7 @@ ind.nlme4 <- update(ind.nlme,
 
 #alternatively, drop Vcmax.f as a rep-by-rep random effect
 ind.nlme5 <- update(ind.nlme,
-										fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a~1),
+										fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
 										start = c(fixef(ind.nlme)[1], 0, 0, 0,
 															fixef(ind.nlme)[2], 0, 0, 0,
 															fixef(ind.nlme)[3]
@@ -323,55 +322,26 @@ ind.nlme5 <- update(ind.nlme,
 										random = Vcmax.i + tau.a ~ 1
 										)
 
-#compare these with the model that has a full complement of random effects
-# and minimised fixed effects
-anova(ind.nlme3, ind.nlme5)
-anova(ind.nlme3, ind.nlme4)
-#better off dropping tau.a as a random effect					
-
-anova(ind.nlme4)
-#now the fixed effect Vcmax.f.geno is definitely not useful
+#alternatively, drop Vcmax.i as a rep-by-rep random effect
 ind.nlme6 <- update(ind.nlme,
-										fixed = list(Vcmax.i ~ geno, Vcmax.f + tau.a ~ 1),
-										start = c(fixef(ind.nlme)[1], 0, 0, 0,
-															fixef(ind.nlme)[2],
-															fixef(ind.nlme)[3]
-															),
-										random = Vcmax.i + Vcmax.f ~ 1
-										)
-
-#model comparison
-anova(ind.nlme4, ind.nlme6)
-#in.nlme6 is a better model
-
-anova(ind.nlme6)
-#the Vcmax.i*geno effect is getting a bit marginal
-intervals(ind.nlme6)
-#This plot won't work
-#plot(augPred(ind.nlme6, primary = ~induction.s, level = 0:1))
-#but overall, this looks appropriate
-
-#Quickly check if removing the genotype*Vcmax.i term results in a worse fit
-ind.nlme7 <- update(ind.nlme,
-                    fixed = list(Vcmax.i + Vcmax.f + tau.a ~ 1),
-                    start = c(fixef(ind.nlme)[1],
-                              fixef(ind.nlme)[2],
+                    fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
+                    start = c(fixef(ind.nlme)[1], 0, 0, 0,
+                              fixef(ind.nlme)[2], 0, 0, 0,
                               fixef(ind.nlme)[3]
-                    ),
-                    random = Vcmax.i + Vcmax.f ~ 1
+                    ), 
+                    random = Vcmax.f + tau.a ~ 1
 )
 
-anova(ind.nlme6, ind.nlme7)
-#The change is very marginal - ind.nlme7 is a slightly better model by AIC
-#despite a slightly lower (not significantly so) likelihood
-intervals(ind.nlme7)
-#as above, this plot fails...
-#plot(augPred(ind.nlme7, primary = ~induction.s, level = 0:1))
-#This plot confirms that the fixed effect of genotype is having little influence
-anova(ind.nlme7)
+#compare these with the model that has a full complement of random effects
+# and minimised fixed effects
+anova(ind.nlme3, ind.nlme4)
+anova(ind.nlme3, ind.nlme5)
+anova(ind.nlme3, ind.nlme6)
+#None of these can be dropped as random effects					
 
-#0121 The below is modified to reflect ind.nlme7 as the best model
-# instead of ind.nlme6
+ind.nlme3
+
+#0321 The below is modified to reflect use of ilGKg.df2 & ind.nlme3
 ################################################################################
 ################################################################################
 #Plots and output
@@ -379,26 +349,26 @@ anova(ind.nlme7)
 ################################################################################
 #produce a plot equivalent to the augPred function
 t.smth <- c(1200:1800)
-p.smth <- as.character(unique(ilGKg.df.ind_noIT2[ , "plant"]))
+p.smth <- as.character(unique(ilGKg.df2[ , "plant"]))
 g.smth <- sapply(strsplit(p.smth, "_"), function(.){ .[1] })
 nd.Vc <- data.frame(induction.s = rep(t.smth, length(p.smth)), 
                     geno = rep(g.smth, each = length(t.smth)), 
                     plant = rep(p.smth, each = length(t.smth))
 )
-nd.Vc$plant <- factor(nd.Vc$plant, levels = levels(ilGKg.df.ind_noIT2$plant))
-nd.Vc$geno <- factor(nd.Vc$geno, levels = levels(ilGKg.df.ind_noIT2$geno))
+nd.Vc$plant <- factor(nd.Vc$plant, levels = levels(ilGKg.df2$plant))
+nd.Vc$geno <- factor(nd.Vc$geno, levels = levels(ilGKg.df2$geno))
 
-pred.ind.nlme7 <- data.frame(
-  Vc.geno = predict(ind.nlme7, newdata = nd.Vc, level = 0), 
-	Vc.plant = predict(ind.nlme7, newdata = nd.Vc, level = 1), 
+pred.ind.nlme3 <- data.frame(
+  Vc.geno = predict(ind.nlme3, newdata = nd.Vc, level = 0), 
+	Vc.plant = predict(ind.nlme3, newdata = nd.Vc, level = 1), 
 	plant = nd.Vc$plant,
 	geno = nd.Vc$geno, 
 	induction.s = nd.Vc$induction.s
   )
 
 fhds <- c("plant", "induction.s", "Vcmax.t")
-facs.ind.nlme7 <- ilGKg.df.ind_noIT2[, fhds]
-pred.ind.nlme7 <- merge(pred.ind.nlme7, facs.ind.nlme7, all.x = TRUE)
+facs.ind.nlme3 <- ilGKg.df2[, fhds]
+pred.ind.nlme3 <- merge(pred.ind.nlme3, facs.ind.nlme3, all.x = TRUE)
 
 get_rep_list <-	function(geno, p.all){
   g.all <- p.all[p.all$geno == geno, ]
@@ -439,7 +409,7 @@ allrep_plot <- function(geno, p.all){
   lapply(p.reps, plot_rep)
 }
 
-pdf(here("output/082005NaturePlantsnlmeVcmax_plot_nlme7.pdf"),
+pdf(here("output/082005NaturePlantsnlmeVcmax_plot_nlme3.pdf"),
     w = 6, h = 9
     )							
 
@@ -451,8 +421,8 @@ par(mar = c(4.5, 5.5, 3, 1),
     cex.axis = 1.2
     )
 
-glist <- levels(pred.ind.nlme7$geno)
-lapply(glist, allrep_plot, p.all = pred.ind.nlme7)
+glist <- levels(pred.ind.nlme3$geno)
+lapply(glist, allrep_plot, p.all = pred.ind.nlme3)
 
 dev.off()
 
@@ -467,20 +437,19 @@ pdf(here("output/082505NaturePlantsnlmeVcmax_extrapolation.pdf"),
     w = 8, h = 8
     )
 
-nd <- data.frame(induction.s = seq(1200, 2400, 10)
-                 #rep(seq(1200, 2400, 10), 4),
-                 #geno = rep(levels(ilGKg.df$geno),
-                  #          each = length(seq(1200, 2400, 10))
-                 #)
+nd <- data.frame(induction.s = rep(seq(1200, 2400, 10), 4),
+                 geno = rep(levels(ilGKg.df2$geno),
+                            each = length(seq(1200, 2400, 10))
+                 )
 )
-in7 <- predict(ind.nlme7, 
+in3 <- predict(ind.nlme3, 
 								newdata = nd, 
 								level = 0
 								)
-in7 <- data.frame(nd, Vcmax.t = in7)
-par(mfrow = c(1, 1), mar = c(5, 5, 5, 5))
+in3 <- data.frame(nd, Vcmax.t = in3)
+par(mfrow = c(1, 1), mar = c(5, 5, 5, 5), las = 1)
 plot(Vcmax.t ~ induction.s,
-     data = ilGKg.df[ilGKg.df$induction.s > 1260 & ilGKg.df$plant != "IT82E-16_2", ], 
+     data = ilGKg.df2[ilGKg.df2$induction.s > 1260, ], 
      las = 1,
      pch = 21,
      col = NULL,
@@ -489,11 +458,15 @@ plot(Vcmax.t ~ induction.s,
      xlim = c(1200, 1800),
      xaxt = "n", 
      ylab = expression(italic(V)["c, max"]~~(mu*mol~~m^-2~~s^-1)),
-     ylim = c(0, 370)
+     ylim = c(0, 340),
+     yaxt = "n"
 )
 axis(side = 1,
      at = c(1200, 1500, 1800),
      labels = c(0, 5, 10)
+)
+axis(side = 2,
+     at = seq(0, 300, 100)
 )
 title(
   main = expression(
@@ -504,16 +477,16 @@ title(
     )
   )
 
-#by(in6g,
-#   in6g$geno,
-#   function(.){
-     lines(Vcmax.t ~ induction.s, data = in7)
-     points(30 * diff(in7$Vcmax.t) ~ in7$induction.s[c(2:nrow(in7))],
+by(in3,
+   in3$geno,
+   function(.){
+     lines(Vcmax.t ~ induction.s, data = .)
+     points(30 * diff(.$Vcmax.t) ~ .$induction.s[c(2:nrow(.))],
             col = rgb(1, 0, 0, alpha = 0.3),
             pch = 21
      )
-#     }
-#)
+     }
+)
 
 #points(30 * diff(177 - (177 - 88) * exp(-seq(0, 600, 10) / 129)) ~
 #         seq(1210, 1800, 10),
@@ -537,24 +510,27 @@ mtext(side = 4,
 
 dev.off()
 
-#fixed effects CIs as one-tailed value
-cis <- apply(intervals(ind.nlme7)$fixed[ , c(1, 2)], 1, diff)
-fixVcmax <- intervals(ind.nlme7)$fixed[ ,2]
-              #c(fixef(ind.nlme7)[1],
-              #fixef(ind.nlme7)[1] + fixef(ind.nlme7)[c(2:4)]
-              #)
-Vcind.fixed <- cbind(fixVcmax, fixVcmax + cis %*% cbind(-1, 1)) #[c(1:4)] %*% cbind(-1, 1))
+#Vcmax fixed effects CIs
+cis <- apply(intervals(ind.nlme3, which = "fixed")$fixed[ , c(1, 2)], 1, diff)
+#fixed effects estimates for ASi combined with cis
+fixVci <- c(fixef(ind.nlme3)[1],
+            fixef(ind.nlme3)[1] + fixef(ind.nlme3)[c(2:4)]
+)
+#checkit
+cbind(fixVci, fixVci + cis[c(1:4)] %*% cbind(-1, 1))
 
-#Vcind.fixed <- rbind(
-#  cbind(fixVcmax,
-#        fixVcmax + cis[c(1:4)] %*%
-#          cbind(-1, 1)
-#        ),
-#  cbind(fixef(ind.nlme6)[5:6],
-#        fixef(ind.nlme6)[5:6] + cis[c(5:6)] %*%
-#          cbind(-1, 1)
-#        )
-#)
+#fixed effects estimates for Vcmaxf combined with cis
+fixVcf <- c(fixef(ind.nlme3)[5],
+            fixef(ind.nlme3)[5] + fixef(ind.nlme3)[c(6:8)]
+)
+#checkit
+cbind(fixVcf, fixVcf + cis[c(5:8)] %*% cbind(-1, 1))
+
+Vcind.fixed <- rbind(
+  cbind(fixVci, fixVci + cis[c(1:4)] %*% cbind(-1, 1)),
+  cbind(fixVcf, fixVcf + cis[c(5:8)] %*% cbind(-1, 1)),
+  cbind(fixef(ind.nlme3)[9], fixef(ind.nlme3)[9] + cis[9] %*% cbind(-1, 1))
+)
 Vcind.fixed <- as.data.frame(Vcind.fixed)		
 names(Vcind.fixed) <- c("Est", "lower", "upper")
 Vcind.fixed
@@ -563,10 +539,11 @@ Vcind.fixed
 ################################################################################
 #Save outputs
 
-save(in7,
-     ind.nlsList, #added 0321 to check outcome at diurnal scale
-     ind.nlme7,
+#updated 0321
+save(in3,
+     ind.nlsList2,
+     ind.nlme3,
      Vcind.fixed,
-     ilGKg.df,
+     ilGKg.df2,
      file = here("output/082005NaturePlantsnlmeVcmax.Rdata")
      )
