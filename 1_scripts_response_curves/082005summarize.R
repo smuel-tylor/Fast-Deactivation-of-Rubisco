@@ -644,10 +644,17 @@ inds[, Astar.pars] <- NA
 inds.list <- by(inds, inds$plant, identity)
 
 #list formatted Aci outputs
-Aci_GammastarKcoInfgm.list <- by(cpGE$AC_GammastarKcoInfgm_fixed,
-																	cpGE$AC_GammastarKcoInfgm_fixed$plant,
-																	identity
-																	)
+#0321 This needed to be fixed
+#if the INDICES argumnet is not forced to be a factor
+#with the correct levels, it is converted to one and the levels are re-ordered
+Aci_GammastarKcoInfgm.list <- by(
+  cpGE$AC_GammastarKcoInfgm_fixed,
+  factor(cpGE$AC_GammastarKcoInfgm_fixed$plant,
+         levels = cpGE$AC_GammastarKcoInfgm_fixed$plant
+  ),
+  identity
+)
+
 #predict the values throughout induction for Inf gm model
 inds.list_GammastarKcoInfgm_fixed <- mapply(do.Astarpredict,
 																						inds.list,
@@ -678,10 +685,12 @@ plot.Astar.bygeno(inds.list_GammastarKcoInfgm_fixed_paired,
 									)
 
 #repeat for the fixed gm Aci
-Aci_GammastarKcogm.list <- by(cpGE$AC_GammastarKcogm_fixed,
-															cpGE$AC_GammastarKcogm_fixed$plant,
-															identity
-															)
+Aci_GammastarKcogm.list <- by(
+  cpGE$AC_GammastarKcogm_fixed,
+  factor(cpGE$AC_GammastarKcogm_fixed$plant,
+         levels = cpGE$AC_GammastarKcogm_fixed$plant),
+  identity
+)
 
 inds.list_GammastarKcogm_fixed <- mapply(do.Astarpredict,
 																					inds.list,
