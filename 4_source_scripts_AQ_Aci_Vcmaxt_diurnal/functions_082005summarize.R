@@ -171,6 +171,8 @@ doACfit <- function(Aci,
 
 #function to make a summary of key params from fits... complicated,
 # but necessary to make a square df
+# rewritten 0321 because there was re-ordering going on when this was produced
+# not sure why mkAQsq ian't suffering from the same issues...
 mkACsq <- function(ACfits){
   
   #parameters for Aci fits that are useful for summaries
@@ -189,13 +191,20 @@ mkACsq <- function(ACfits){
              input.AC$temperature.normalised
     )
     names(out) <- pars
-    out
+    unlist(out)
   }
   
-  ACmat <- t(sapply(ACfits, pull.ACpars, pars = AC.pars))
-  ACdf <- data.frame(apply(ACmat, 2, unlist))
-  ACdf$plant <- row.names(ACdf)
-  merge(cpdf(NULL), ACdf, all.x = TRUE)
+  ACdf <- cpdf(NULL) 
+  ACdf[ , AC.pars] <- t(sapply(ACdf$plant,
+                               function(.){
+                                 if(!is.null(ACfits[[.]])) {
+                                   pull.ACpars(ACfits[[.]], AC.pars)
+                                 } else { rep(NA, length(AC.pars)) }
+                               }
+  )
+  )
+  ACdf
+
 }
 
 #function to plot Aci fits as one page per genotype,  two panels per plant
