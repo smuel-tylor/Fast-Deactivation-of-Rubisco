@@ -353,7 +353,7 @@ dev.off()
 ################################################################################
 #fixed effects CIs as one-tailed value
 
-cis <- apply(intervals(Vutl.nlme4)$fixed[,c(1,2)], 1, diff)
+cis <- apply(intervals(Vutl.nlme4)$fixed[ , c(1, 2)], 1, diff)
 #fixed effects estimates for ASi combined with cis
 fixASi <- c(fixef(Vutl.nlme4)[1],
             fixef(Vutl.nlme4)[1] + fixef(Vutl.nlme4)[c(2:4)]
