@@ -67,8 +67,8 @@ TVNu.sub <- function(.){
   levels(.$geno) == "TVNu-1948"
 }
 
-levels(Vutl.noAdb$geno)[TVNu.sub(ilGKg.df)] <- "V. sp. Savi."
-levels(pred.Vutl.nlme4$geno)[TVNu.sub(in7)] <- "V. sp. Savi."
+levels(Vutl.noAdb$geno)[TVNu.sub(ilGKg.df.sub)] <- "V. sp. Savi."
+levels(pred.Vutl.nlme4$geno)[TVNu.sub(in3)] <- "V. sp. Savi."
 
 #Nplants column width is ~8.9 cm = 3.44'
 #inward ticks, sans serif
@@ -123,10 +123,10 @@ legend(1200 + 10 * 60, 20,
        xjust = 0.5,
        yjust = 0.5,
        legend = c(
-         as.expression(bquote(italic(.(levels(ilGKg.df$geno)[1])))),
-         bquote(italic(.(levels(ilGKg.df$geno)[2]))),
-         bquote(plain(.(levels(ilGKg.df$geno)[3]))),
-         bquote(plain(.(levels(ilGKg.df$geno)[4])))
+         as.expression(bquote(italic(.(levels(ilGKg.df.sub$geno)[1])))),
+         bquote(italic(.(levels(ilGKg.df.sub$geno)[2]))),
+         bquote(plain(.(levels(ilGKg.df.sub$geno)[3]))),
+         bquote(plain(.(levels(ilGKg.df.sub$geno)[4])))
        ),
        pch = 21,
        pt.bg = t.cols,
@@ -164,9 +164,10 @@ lapply(
   }
 )
 
-#Activation State
+#Vcmax
 plot(Vcmax.t ~ induction.s,
-     data = ilGKg.df,
+     #0321 fixed here & below to match nlmeVcmax.R updates
+     data = ilGKg.df.sub,
      type = "n",
      ylim = c(0, 370),
      xlim = c(20 * 60, 30 * 60),
@@ -198,10 +199,13 @@ mtext(expression(bold(b)),
 )
 
 lapply(
-  levels(ilGKg.df$geno),
+  levels(ilGKg.df.sub$geno),
   function(.){
     points(Vcmax.t ~ induction.s,
-           data = ilGKg.df[ilGKg.df$geno == . & ilGKg.df$induction.s > 1260,],
+           data = ilGKg.df.sub[
+             ilGKg.df.sub$geno == . &
+               ilGKg.df.sub$induction.s > 1260,
+             ],
            pch = 21,
            col = NA,
            bg = t.cols[.],
@@ -210,8 +214,10 @@ lapply(
   }
 )
 
+#########################################################
+#needs fixing 
 lines(Vcmax.t ~ induction.s,
-      data = in7,
+      data = in3,
       col = o.cols[1],
       lwd = 2,
       lty = 1
@@ -221,10 +227,10 @@ legend(1200 + 8 * 60, 60,
        xjust = 0.5,
        yjust = 0.5,
        legend = c(
-         as.expression(bquote(italic(.(levels(ilGKg.df$geno)[1])))),
-         bquote(italic(.(levels(ilGKg.df$geno)[2]))),
-         bquote(plain(.(levels(ilGKg.df$geno)[3]))),
-         bquote(plain(.(levels(ilGKg.df$geno)[4]))),
+         as.expression(bquote(italic(.(levels(ilGKg.df.sub$geno)[1])))),
+         bquote(italic(.(levels(ilGKg.df.sub$geno)[2]))),
+         bquote(plain(.(levels(ilGKg.df.sub$geno)[3]))),
+         bquote(plain(.(levels(ilGKg.df.sub$geno)[4]))),
          "mean"
        ),
        pch = c(rep(21, 4), NA),
