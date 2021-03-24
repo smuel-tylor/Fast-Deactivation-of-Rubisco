@@ -16,7 +16,9 @@ objects()
 #  inds.list_GammastarKcoInfgm_fixed_paired.
 # It should have been:
 # inds.list_GammastarKcogm_fixed_paired
-# This affected the nlme section and the output from that, but not the AC.j.
+# This affected the nlme section and the output from that, but not the AC.j
+# 0321 noticed that the lists (ilGKg and AC.fits_GammastarKcogm_fixed_paired)
+#  had different orders. This needed correction in the summarize.R script
 ilGKg <- inds.list_GammastarKcogm_fixed_paired
 #commenting this to stop masses of console output when sourced...
 #str(ilGKg)
@@ -231,14 +233,14 @@ plot(intervals(ind.nlsList))
 #0321 - remove IT8D-1010_9 and V.adenantha_8 because of high residual variance
 # -problematic in terms of homoskedasticity
 # -also in terms of the basic model because some early data exceed the asymptote
-ilGKg.df2 <- ilGKg.df.ind[ilGKg.df.ind$plant != "IT86D-1010_9" &
+ilGKg.df.sub <- ilGKg.df.ind[ilGKg.df.ind$plant != "IT86D-1010_9" &
                                      ilGKg.df.ind$plant != "V. adenantha_8", ]
 
 ind.nlsList2 <- nlsList(
   Vcmax.t ~ (Vcmax.f - (Vcmax.f - Vcmax.i) *
                exp( -(induction.s - 1200) / tau.a)) | plant,
   start = c(Vcmax.i = 60, Vcmax.f = 170, tau.a = 120),
-  data = ilGKg.df2,
+  data = ilGKg.df.sub,
   na.action = na.exclude
 )
 
@@ -253,7 +255,7 @@ plot(intervals(ind.nlsList2))
 ind.nls <- nls(
   Vcmax.t ~ (Vcmax.f - (Vcmax.f - Vcmax.i) * exp(-(induction.s - 1200) / tau.a)),
   start = c(Vcmax.i = 60, Vcmax.f = 170, tau.a = 120),
-  data = ilGKg.df2, na.action = na.exclude
+  data = ilGKg.df.sub, na.action = na.exclude
   )
 
 summary(ind.nls)
@@ -272,7 +274,7 @@ ind.nlme
 
 plot(ranef(ind.nlme))
 #No obvious structure, based on this plot
-# incorporate and test for fixed effects of genotype
+# incorporate and test for necessary fixed effects of genotype
 ind.nlme2 <- update(ind.nlme,
                     fixed = Vcmax.i + Vcmax.f + tau.a ~ geno,
                     start = c(fixef(ind.nlme)[1], 0, 0, 0,
@@ -282,7 +284,7 @@ ind.nlme2 <- update(ind.nlme,
                     )
 #works, with a warning about non-convergence
 anova(ind.nlme, ind.nlme2)
-#this is a bad step... AIC increases, but we need to know about genotype effects
+#this is marginally a bad step... AIC increases, but we need to know about genotype effects
 anova(ind.nlme2)
 #This indicates that dropping tau.a as a genotype-level fixed effect makes sense
 ind.nlme3 <- update(ind.nlme,
@@ -323,25 +325,26 @@ ind.nlme5 <- update(ind.nlme,
 										)
 
 #alternatively, drop Vcmax.i as a rep-by-rep random effect
-ind.nlme6 <- update(ind.nlme,
-                    fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
-                    start = c(fixef(ind.nlme)[1], 0, 0, 0,
-                              fixef(ind.nlme)[2], 0, 0, 0,
-                              fixef(ind.nlme)[3]
-                    ), 
-                    random = Vcmax.f + tau.a ~ 1
-)
+#ind.nlme6 <- update(ind.nlme,
+#                    fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
+#                    start = c(fixef(ind.nlme)[1], 0, 0, 0,
+#                              fixef(ind.nlme)[2], 0, 0, 0,
+#                              fixef(ind.nlme)[3]
+#                    ), 
+#                    random = Vcmax.f + tau.a ~ 1
+#)
+#This latter, hashed-out model, does not converge, so clearly not a good idea...
 
 #compare these with the model that has a full complement of random effects
 # and minimised fixed effects
 anova(ind.nlme3, ind.nlme4)
 anova(ind.nlme3, ind.nlme5)
-anova(ind.nlme3, ind.nlme6)
+#anova(ind.nlme3, ind.nlme6)
 #None of these can be dropped as random effects					
 
 ind.nlme3
 
-#0321 The below is modified to reflect use of ilGKg.df2 & ind.nlme3
+#0321 The below is modified to reflect use of ilGKg.df.sub & ind.nlme3
 ################################################################################
 ################################################################################
 #Plots and output
@@ -349,14 +352,14 @@ ind.nlme3
 ################################################################################
 #produce a plot equivalent to the augPred function
 t.smth <- c(1200:1800)
-p.smth <- as.character(unique(ilGKg.df2[ , "plant"]))
+p.smth <- as.character(unique(ilGKg.df.sub[ , "plant"]))
 g.smth <- sapply(strsplit(p.smth, "_"), function(.){ .[1] })
 nd.Vc <- data.frame(induction.s = rep(t.smth, length(p.smth)), 
                     geno = rep(g.smth, each = length(t.smth)), 
                     plant = rep(p.smth, each = length(t.smth))
 )
-nd.Vc$plant <- factor(nd.Vc$plant, levels = levels(ilGKg.df2$plant))
-nd.Vc$geno <- factor(nd.Vc$geno, levels = levels(ilGKg.df2$geno))
+nd.Vc$plant <- factor(nd.Vc$plant, levels = levels(ilGKg.df.sub$plant))
+nd.Vc$geno <- factor(nd.Vc$geno, levels = levels(ilGKg.df.sub$geno))
 
 pred.ind.nlme3 <- data.frame(
   Vc.geno = predict(ind.nlme3, newdata = nd.Vc, level = 0), 
@@ -367,7 +370,7 @@ pred.ind.nlme3 <- data.frame(
   )
 
 fhds <- c("plant", "induction.s", "Vcmax.t")
-facs.ind.nlme3 <- ilGKg.df2[, fhds]
+facs.ind.nlme3 <- ilGKg.df.sub[, fhds]
 pred.ind.nlme3 <- merge(pred.ind.nlme3, facs.ind.nlme3, all.x = TRUE)
 
 get_rep_list <-	function(geno, p.all){
@@ -438,7 +441,7 @@ pdf(here("output/082505NaturePlantsnlmeVcmax_extrapolation.pdf"),
     )
 
 nd <- data.frame(induction.s = rep(seq(1200, 2400, 10), 4),
-                 geno = rep(levels(ilGKg.df2$geno),
+                 geno = rep(levels(ilGKg.df.sub$geno),
                             each = length(seq(1200, 2400, 10))
                  )
 )
@@ -449,7 +452,7 @@ in3 <- predict(ind.nlme3,
 in3 <- data.frame(nd, Vcmax.t = in3)
 par(mfrow = c(1, 1), mar = c(5, 5, 5, 5), las = 1)
 plot(Vcmax.t ~ induction.s,
-     data = ilGKg.df2[ilGKg.df2$induction.s > 1260, ], 
+     data = ilGKg.df.sub[ilGKg.df.sub$induction.s > 1260, ], 
      las = 1,
      pch = 21,
      col = NULL,
@@ -544,6 +547,6 @@ save(in3,
      ind.nlsList2,
      ind.nlme3,
      Vcind.fixed,
-     ilGKg.df2,
+     ilGKg.df.sub,
      file = here("output/082005NaturePlantsnlmeVcmax.Rdata")
      )

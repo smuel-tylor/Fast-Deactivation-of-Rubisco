@@ -25,11 +25,13 @@ AQ.fixed
 AS.fixed
 Vcind.fixed
 
-#added 0121
+#added 0121 and adapted 0321
+Af <- Vcind.fixed[grep("Vcmax.f", rownames(Vcind.fixed)), "Est"]
+Ai <- Vcind.fixed[grep("Vcmax.i", rownames(Vcind.fixed)), "Est"]
 tau.d.Vc <- tau.down(
-  Af = Vcind.fixed[grep("Vcmax.f", rownames(Vcind.fixed)), "Est"],
-  Ai = Vcind.fixed[grep("Vcmax.i", rownames(Vcind.fixed)), "Est"],
-  shade.s = 1200
+  Af = Af,
+  Ai = Ai,
+  shade.s = rep(1200, length(Af))
 )
 
 d_in <- data.frame(
@@ -40,12 +42,7 @@ d_in <- data.frame(
   Rd = AQ.fixed[grep("Rd", rownames(AQ.fixed)), "Est"],
   tau.d.AS = AS.fixed[grep("tau.d", rownames(AS.fixed)), "Est"],
   tau.a.AS = rep(AS.fixed[grep("tau.a", rownames(AS.fixed)), "Est"], 4),
-  #this line affected by corrections to  nlmeVcmax.R
-  #tau.d.Vc = -1200 /
-  #  log(Vcind.fixed[grep("Vcmax.i", rownames(Vcind.fixed)), "Est"] /
-  #        Vcind.fixed[grep("Vcmax.f", rownames(Vcind.fixed)), "Est"]
-  #  ),
-  tau.d.Vc = rep(tau.d.Vc, 4),
+  tau.d.Vc = tau.d.Vc,
   tau.a.Vc = rep(Vcind.fixed[grep("tau.a", rownames(Vcind.fixed)), "Est"], 4)
 )
 
@@ -158,7 +155,7 @@ names(cum1)[3] <- names(cum2)[3] <- "cum"
 cum1$model <- "absnolag"
 cum<-rbind(cum1, cum2)
 
-me.diurnal3 <- lme(cum ~ model, random = ~1 | geno, data = cum)
+me.diurnal3 <- lme(cum ~ model, random = ~ 1 | geno, data = cum)
 fixefci(me.diurnal3, nlev = 5)
 anova(me.diurnal3)
 
