@@ -645,8 +645,8 @@ inds.list <- by(inds, inds$plant, identity)
 
 #list formatted Aci outputs
 #0321 This needed to be fixed
-#if the INDICES argumnet is not forced to be a factor
-#with the correct levels, it is converted to one and the levels are re-ordered
+#if the INDICES argument is not forced to be a factor with the correct levels,
+# it is converted to one automatically and the levels are scambled
 Aci_GammastarKcoInfgm.list <- by(
   cpGE$AC_GammastarKcoInfgm_fixed,
   factor(cpGE$AC_GammastarKcoInfgm_fixed$plant,
