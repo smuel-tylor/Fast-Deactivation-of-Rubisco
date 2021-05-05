@@ -230,7 +230,7 @@ plot(intervals(ind.nlsList))
 #As you might anticipate from noisy data,
 # some really poorly constrained estimates of the coefs
 
-#0321 - remove IT8D-1010_9 and V.adenantha_8 because of high residual variance
+#0321 - remove IT86D-1010_9 and V.adenantha_8 because of high residual variance
 # -problematic in terms of homoskedasticity
 # -also in terms of the basic model because some early data exceed the asymptote
 ilGKg.df.sub <- ilGKg.df.ind[ilGKg.df.ind$plant != "IT86D-1010_9" &
@@ -274,6 +274,7 @@ ind.nlme
 
 plot(ranef(ind.nlme))
 #No obvious structure, based on this plot
+# except... maybe Vcmax.i differs between genotypes?? 
 # incorporate and test for necessary fixed effects of genotype
 ind.nlme2 <- update(ind.nlme,
                     fixed = Vcmax.i + Vcmax.f + tau.a ~ geno,
@@ -508,7 +509,8 @@ axis(side = 4,
 mtext(side = 4,
       line = 3,
       expression("change in " * italic(V)["c, max"] * " per 10 s interval"),
-      col = 2
+      col = 2,
+      las = 3
 )
 
 dev.off()
