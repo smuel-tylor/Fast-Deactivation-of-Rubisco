@@ -67,8 +67,12 @@ TVNu.sub <- function(.){
   levels(.$geno) == "TVNu-1948"
 }
 
-levels(Vutl.noAdb$geno)[TVNu.sub(ilGKg.df.sub)] <- "V. sp. Savi."
-levels(pred.Vutl.nlme4$geno)[TVNu.sub(in3)] <- "V. sp. Savi."
+levels(Vutl.noAdb$geno)[TVNu.sub(Vutl.noAdb)] <- "V. sp. Savi."
+levels(pred.Vutl.nlme4$geno)[TVNu.sub(pred.Vutl.nlme4)] <- "V. sp. Savi."
+
+levels(ilGKg.df.sub$geno)[TVNu.sub(ilGKg.df.sub)] <- "V. sp. Savi."
+in3$geno <- factor(in3$geno, levels = g.levs)
+levels(in3$geno)[TVNu.sub(in3)] <- "V. sp. Savi."
 
 #Nplants column width is ~8.9 cm = 3.44'
 #inward ticks, sans serif
@@ -216,32 +220,47 @@ lapply(
 
 #########################################################
 #needs fixing 
-lines(Vcmax.t ~ induction.s,
-      data = in3,
-      col = o.cols[1],
-      lwd = 2,
-      lty = 1
+#lines(Vcmax.t ~ induction.s,
+#      data = in3,
+#      col = o.cols[1],
+#      lwd = 2,
+#      lty = 1
+#)
+
+lapply(
+  levels(ilGKg.df.sub$geno),
+  function(.){
+    use <- in3[in3$geno == ., ]
+    use <- use[c(1:2520), ]
+    print(use)
+    lines(Vcmax.t ~ induction.s,
+          data = use,
+          col = o.cols[.],
+          lwd = 2
+    )
+  }
 )
 
-legend(1200 + 8 * 60, 60,
-       xjust = 0.5,
-       yjust = 0.5,
-       legend = c(
-         as.expression(bquote(italic(.(levels(ilGKg.df.sub$geno)[1])))),
-         bquote(italic(.(levels(ilGKg.df.sub$geno)[2]))),
-         bquote(plain(.(levels(ilGKg.df.sub$geno)[3]))),
-         bquote(plain(.(levels(ilGKg.df.sub$geno)[4]))),
-         "mean"
-       ),
-       pch = c(rep(21, 4), NA),
-       pt.bg = c(t.cols, NA),
-       pt.lwd = c(rep(0, 4), NA),
-       lwd = c(rep(NA, 4), 2),
-       lty = c(rep(NA, 4), 1),
-       col = c(o.cols, o.cols[1]),
-       ncol = 1,
-       bty = "n",
-       cex = 0.7
-)
+
+#legend(1200 + 8 * 60, 60,
+#       xjust = 0.5,
+#       yjust = 0.5,
+#       legend = c(
+#         as.expression(bquote(italic(.(levels(ilGKg.df.sub$geno)[1])))),
+#         bquote(italic(.(levels(ilGKg.df.sub$geno)[2]))),
+#         bquote(plain(.(levels(ilGKg.df.sub$geno)[3]))),
+#         bquote(plain(.(levels(ilGKg.df.sub$geno)[4]))),
+#         "mean"
+#       ),
+#       pch = c(rep(21, 4), NA),
+#       pt.bg = c(t.cols, NA),
+#       pt.lwd = c(rep(0, 4), NA),
+#       lwd = c(rep(NA, 4), 2),
+#       lty = c(rep(NA, 4), 1),
+#       col = c(o.cols, o.cols[1]),
+#       ncol = 1,
+#       bty = "n",
+#       cex = 0.7
+#)
     
 dev.off()
