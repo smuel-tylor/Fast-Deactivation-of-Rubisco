@@ -463,6 +463,8 @@ in4 <- predict(ind.nlme4,
 								level = 0
 								)
 in4 <- data.frame(nd, Vcmax.t = in4)
+#this object is used in Figure1.R
+
 par(mfrow = c(1, 1), mar = c(5, 5, 5, 5), las = 1)
 plot(Vcmax.t ~ induction.s,
      data = ilGKg.df.sub[ilGKg.df.sub$induction.s > 1260, ], 
