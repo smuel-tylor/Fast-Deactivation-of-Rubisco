@@ -267,7 +267,7 @@ cbind(row.names(ao),
 ################################################################################
 #produce a nice plot of this,
 # since the augPred function seems not to work for this one
-t.smth <- c(-120:2400)
+t.smth <- c(-240:2340)
 s.0.smth <- ifelse(t.smth < 0,  1,  0)
 s.d.smth <- ifelse(t.smth < 0 | t.smth >= 1200,  0,  1)
 s.a.smth <- ifelse(t.smth >= 1200,  1,  0)
