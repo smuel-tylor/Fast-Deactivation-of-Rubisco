@@ -4,8 +4,8 @@ drives a 26% loss in productivity"
 The following set of subdirectories written for use as a .Rproject in RStudio
 version control using Git and pushed to GitHub
 and using renv to ensure reproducibility of package set up
-Obviously, this all means that while the Project should run smoothly in Rstudio
-there may be extra work required for those who do not use RStudio
+The Project should run smoothly in Rstudio,
+but there may be extra work required for those who do not use RStudio
 
 /data
 - files in this directory are published on the Lancaster Research Repository
