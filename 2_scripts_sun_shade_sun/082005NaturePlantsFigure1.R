@@ -71,8 +71,8 @@ levels(Vutl.noAdb$geno)[TVNu.sub(Vutl.noAdb)] <- "V. sp. Savi."
 levels(pred.Vutl.nlme4$geno)[TVNu.sub(pred.Vutl.nlme4)] <- "V. sp. Savi."
 
 levels(ilGKg.df.sub$geno)[TVNu.sub(ilGKg.df.sub)] <- "V. sp. Savi."
-in3$geno <- factor(in3$geno, levels = g.levs)
-levels(in3$geno)[TVNu.sub(in3)] <- "V. sp. Savi."
+in4$geno <- factor(in4$geno, levels = g.levs)
+levels(in4$geno)[TVNu.sub(in4)] <- "V. sp. Savi."
 
 #Nplants column width is ~8.9 cm = 3.44'
 #inward ticks, sans serif
@@ -221,7 +221,7 @@ lapply(
 #########################################################
 #needs fixing 
 #lines(Vcmax.t ~ induction.s,
-#      data = in3,
+#      data = in4,
 #      col = o.cols[1],
 #      lwd = 2,
 #      lty = 1
@@ -230,7 +230,7 @@ lapply(
 lapply(
   levels(ilGKg.df.sub$geno),
   function(.){
-    use <- in3[in3$geno == ., ]
+    use <- in4[in4$geno == ., ]
     use <- use[c(1:2520), ]
     print(use)
     lines(Vcmax.t ~ induction.s,
