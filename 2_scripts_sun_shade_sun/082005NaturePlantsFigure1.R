@@ -218,15 +218,6 @@ lapply(
   }
 )
 
-#########################################################
-#needs fixing 
-#lines(Vcmax.t ~ induction.s,
-#      data = in4,
-#      col = o.cols[1],
-#      lwd = 2,
-#      lty = 1
-#)
-
 lapply(
   levels(ilGKg.df.sub$geno),
   function(.){
@@ -241,26 +232,4 @@ lapply(
   }
 )
 
-
-#legend(1200 + 8 * 60, 60,
-#       xjust = 0.5,
-#       yjust = 0.5,
-#       legend = c(
-#         as.expression(bquote(italic(.(levels(ilGKg.df.sub$geno)[1])))),
-#         bquote(italic(.(levels(ilGKg.df.sub$geno)[2]))),
-#         bquote(plain(.(levels(ilGKg.df.sub$geno)[3]))),
-#         bquote(plain(.(levels(ilGKg.df.sub$geno)[4]))),
-#         "mean"
-#       ),
-#       pch = c(rep(21, 4), NA),
-#       pt.bg = c(t.cols, NA),
-#       pt.lwd = c(rep(0, 4), NA),
-#       lwd = c(rep(NA, 4), 2),
-#       lty = c(rep(NA, 4), 1),
-#       col = c(o.cols, o.cols[1]),
-#       ncol = 1,
-#       bty = "n",
-#       cex = 0.7
-#)
-    
 dev.off()
