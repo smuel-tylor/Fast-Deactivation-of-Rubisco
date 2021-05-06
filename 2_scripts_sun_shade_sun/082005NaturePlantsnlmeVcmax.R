@@ -266,7 +266,7 @@ plot(ind.nls,  plant ~ resid(.),  abline  =  0 )
 #Explains why:
 # some plants are deviating strongly from the mean 
 
-#build a random effects model starting from the over-parameterised ind.nlsList
+#build a random effects model starting from the over-parameterised ind.nlsList2
 #have to boost the iterations a lot here to force this to work
 ind.nlme <- nlme(ind.nlsList2, control = list(maxIter = 1000, msMaxIter = 1000))
 ind.nlme
@@ -286,6 +286,8 @@ ind.nlme2 <- update(ind.nlme,
 #works, with a warning about non-convergence
 anova(ind.nlme, ind.nlme2)
 #this is marginally a bad step... AIC increases, but we need to know about genotype effects
+summary(ind.nlme2)
+#nothing looks useful here
 anova(ind.nlme2)
 #This indicates that dropping tau.a as a genotype-level fixed effect makes sense
 ind.nlme3 <- update(ind.nlme,
@@ -295,57 +297,65 @@ ind.nlme3 <- update(ind.nlme,
 															fixef(ind.nlme)[3]
 															)
 										)
-anova(ind.nlme, ind.nlme3)
+anova(ind.nlme, ind.nlme2, ind.nlme3)
 #smaller than ind.nlme2, but also increasing AIC compared with ind.nlme
 #Similar effect on likelihood to ind.nlme2
-
 pairs(ind.nlme3)
 anova(ind.nlme3)
 #looks like all fixef are reasonable here
+summary(ind.nlme3)
+#but only Vcmax.i coefs look to be significant
+
+#so check Vcmax.f.geno
+ind.nlme4 <- update(ind.nlme,
+                    fixed = list(Vcmax.i ~ geno, Vcmax.f + tau.a ~ 1),
+                    start = c(fixef(ind.nlme)[1], 0, 0, 0,
+                              fixef(ind.nlme)[2],
+                              fixef(ind.nlme)[3]
+                    )
+)
+anova(ind.nlme, ind.nlme2, ind.nlme3, ind.nlme4)
+#no issue with dropping this despite low Wald test p... (F value was marginal).
+# This model with only Vcmax.i, which was identified graphically to begin,
+# is now better than the complete random effect model by AIC
+pairs(ind.nlme4)
+anova(ind.nlme4)
+summary(ind.nlme4)
+
+#belt & braces sanity check if you drop Vcmax.i instead or retain tau.a
+ind.nlme5 <- update(ind.nlme,
+                    fixed = list(Vcmax.f ~ geno, Vcmax.i + tau.a ~ 1),
+                    start = c(fixef(ind.nlme)[2], 0, 0, 0,
+                              fixef(ind.nlme)[1],
+                              fixef(ind.nlme)[3]
+                    )
+)
+
+anova(ind.nlme, ind.nlme2, ind.nlme3, ind.nlme4, ind.nlme5)
+#ind.nlme4, is clearly the best fixef model
 
 #Is it reasonable to drop any of the random effects?
 
 #drop tau.a as a rep-by-rep random effect
-ind.nlme4 <- update(ind.nlme,
-										fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
-										start = c(fixef(ind.nlme)[1], 0, 0, 0,
-															fixef(ind.nlme)[2], 0, 0, 0,
-															fixef(ind.nlme)[3]
-															),
-										random = Vcmax.i + Vcmax.f ~ 1
-										)
-
+ind.nlme6 <- update(ind.nlme4,
+                    random = Vcmax.i + Vcmax.f ~ 1
+)
 #alternatively, drop Vcmax.f as a rep-by-rep random effect
-ind.nlme5 <- update(ind.nlme,
-										fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
-										start = c(fixef(ind.nlme)[1], 0, 0, 0,
-															fixef(ind.nlme)[2], 0, 0, 0,
-															fixef(ind.nlme)[3]
-															), 
-										random = Vcmax.i + tau.a ~ 1
-										)
-
+ind.nlme7 <- update(ind.nlme4, 
+                    random = Vcmax.i + tau.a ~ 1
+)
 #alternatively, drop Vcmax.i as a rep-by-rep random effect
-#ind.nlme6 <- update(ind.nlme,
-#                    fixed = list(Vcmax.i + Vcmax.f ~ geno, tau.a ~ 1),
-#                    start = c(fixef(ind.nlme)[1], 0, 0, 0,
-#                              fixef(ind.nlme)[2], 0, 0, 0,
-#                              fixef(ind.nlme)[3]
-#                    ), 
-#                    random = Vcmax.f + tau.a ~ 1
-#)
-#This latter, hashed-out model, does not converge, so clearly not a good idea...
+ind.nlme8 <- update(ind.nlme4, 
+                    random = Vcmax.f + tau.a ~ 1
+)
 
 #compare these with the model that has a full complement of random effects
 # and minimised fixed effects
-anova(ind.nlme3, ind.nlme4)
-anova(ind.nlme3, ind.nlme5)
-#anova(ind.nlme3, ind.nlme6)
-#None of these can be dropped as random effects					
+anova(ind.nlme4, ind.nlme6, ind.nlme7, ind.nlme8)
+#None of these can be dropped as random effects
+# without significant decrease in logLik, and increase in AIC
 
-ind.nlme3
-
-#0321 The below is modified to reflect use of ilGKg.df.sub & ind.nlme3
+#0321 The below is modified to reflect use of ilGKg.df.sub & ind.nlme4
 ################################################################################
 ################################################################################
 #Plots and output
@@ -362,17 +372,17 @@ nd.Vc <- data.frame(induction.s = rep(t.smth, length(p.smth)),
 nd.Vc$plant <- factor(nd.Vc$plant, levels = levels(ilGKg.df.sub$plant))
 nd.Vc$geno <- factor(nd.Vc$geno, levels = levels(ilGKg.df.sub$geno))
 
-pred.ind.nlme3 <- data.frame(
-  Vc.geno = predict(ind.nlme3, newdata = nd.Vc, level = 0), 
-	Vc.plant = predict(ind.nlme3, newdata = nd.Vc, level = 1), 
+pred.ind.nlme4 <- data.frame(
+  Vc.geno = predict(ind.nlme4, newdata = nd.Vc, level = 0), 
+	Vc.plant = predict(ind.nlme4, newdata = nd.Vc, level = 1), 
 	plant = nd.Vc$plant,
 	geno = nd.Vc$geno, 
 	induction.s = nd.Vc$induction.s
   )
 
 fhds <- c("plant", "induction.s", "Vcmax.t")
-facs.ind.nlme3 <- ilGKg.df.sub[, fhds]
-pred.ind.nlme3 <- merge(pred.ind.nlme3, facs.ind.nlme3, all.x = TRUE)
+facs.ind.nlme4 <- ilGKg.df.sub[, fhds]
+pred.ind.nlme4 <- merge(pred.ind.nlme4, facs.ind.nlme4, all.x = TRUE)
 
 get_rep_list <-	function(geno, p.all){
   g.all <- p.all[p.all$geno == geno, ]
@@ -425,8 +435,8 @@ par(mar = c(4.5, 5.5, 3, 1),
     cex.axis = 1.2
     )
 
-glist <- levels(pred.ind.nlme3$geno)
-lapply(glist, allrep_plot, p.all = pred.ind.nlme3)
+glist <- levels(pred.ind.nlme4$geno)
+lapply(glist, allrep_plot, p.all = pred.ind.nlme4)
 
 dev.off()
 
@@ -446,11 +456,11 @@ nd <- data.frame(induction.s = rep(seq(1200, 2400, 10), 4),
                             each = length(seq(1200, 2400, 10))
                  )
 )
-in3 <- predict(ind.nlme3, 
+in4 <- predict(ind.nlme4, 
 								newdata = nd, 
 								level = 0
 								)
-in3 <- data.frame(nd, Vcmax.t = in3)
+in4 <- data.frame(nd, Vcmax.t = in4)
 par(mfrow = c(1, 1), mar = c(5, 5, 5, 5), las = 1)
 plot(Vcmax.t ~ induction.s,
      data = ilGKg.df.sub[ilGKg.df.sub$induction.s > 1260, ], 
@@ -481,8 +491,8 @@ title(
     )
   )
 
-by(in3,
-   in3$geno,
+by(in4,
+   in4$geno,
    function(.){
      lines(Vcmax.t ~ induction.s, data = .)
      points(30 * diff(.$Vcmax.t) ~ .$induction.s[c(2:nrow(.))],
@@ -516,17 +526,17 @@ mtext(side = 4,
 dev.off()
 
 #Vcmax fixed effects CIs
-cis <- apply(intervals(ind.nlme3, which = "fixed")$fixed[ , c(1, 2)], 1, diff)
+cis <- apply(intervals(ind.nlme4, which = "fixed")$fixed[ , c(1, 2)], 1, diff)
 #fixed effects estimates for ASi combined with cis
-fixVci <- c(fixef(ind.nlme3)[1],
-            fixef(ind.nlme3)[1] + fixef(ind.nlme3)[c(2:4)]
+fixVci <- c(fixef(ind.nlme4)[1],
+            fixef(ind.nlme4)[1] + fixef(ind.nlme4)[c(2:4)]
 )
 #checkit
 cbind(fixVci, fixVci + cis[c(1:4)] %*% cbind(-1, 1))
 
 #fixed effects estimates for Vcmaxf combined with cis
-fixVcf <- c(fixef(ind.nlme3)[5],
-            fixef(ind.nlme3)[5] + fixef(ind.nlme3)[c(6:8)]
+fixVcf <- c(fixef(ind.nlme4)[5],
+            fixef(ind.nlme4)[5] + fixef(ind.nlme4)[c(6:8)]
 )
 #checkit
 cbind(fixVcf, fixVcf + cis[c(5:8)] %*% cbind(-1, 1))
@@ -534,7 +544,7 @@ cbind(fixVcf, fixVcf + cis[c(5:8)] %*% cbind(-1, 1))
 Vcind.fixed <- rbind(
   cbind(fixVci, fixVci + cis[c(1:4)] %*% cbind(-1, 1)),
   cbind(fixVcf, fixVcf + cis[c(5:8)] %*% cbind(-1, 1)),
-  cbind(fixef(ind.nlme3)[9], fixef(ind.nlme3)[9] + cis[9] %*% cbind(-1, 1))
+  cbind(fixef(ind.nlme4)[9], fixef(ind.nlme4)[9] + cis[9] %*% cbind(-1, 1))
 )
 Vcind.fixed <- as.data.frame(Vcind.fixed)		
 names(Vcind.fixed) <- c("Est", "lower", "upper")
@@ -545,9 +555,9 @@ Vcind.fixed
 #Save outputs
 
 #updated 0321
-save(in3,
+save(in4,
      ind.nlsList2,
-     ind.nlme3,
+     ind.nlme4,
      Vcind.fixed,
      ilGKg.df.sub,
      file = here("output/082005NaturePlantsnlmeVcmax.Rdata")
