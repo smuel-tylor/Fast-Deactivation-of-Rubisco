@@ -423,7 +423,7 @@ allrep_plot <- function(geno, p.all){
   lapply(p.reps, plot_rep)
 }
 
-pdf(here("output/082005NaturePlantsnlmeVcmax_plot_nlme3.pdf"),
+pdf(here("output/082005NaturePlantsnlmeVcmax_plot_nlme4.pdf"),
     w = 6, h = 9
     )							
 
