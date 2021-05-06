@@ -528,23 +528,22 @@ dev.off()
 #Vcmax fixed effects CIs
 cis <- apply(intervals(ind.nlme4, which = "fixed")$fixed[ , c(1, 2)], 1, diff)
 #fixed effects estimates for ASi combined with cis
-fixVci <- c(fixef(ind.nlme4)[1],
-            fixef(ind.nlme4)[1] + fixef(ind.nlme4)[c(2:4)]
-)
-#checkit
-cbind(fixVci, fixVci + cis[c(1:4)] %*% cbind(-1, 1))
+nmsfe <- names(fixef(ind.nlme4))
+all(nmsfe == names(cis))
 
-#fixed effects estimates for Vcmaxf combined with cis
-fixVcf <- c(fixef(ind.nlme4)[5],
-            fixef(ind.nlme4)[5] + fixef(ind.nlme4)[c(6:8)]
+fixVci <- c(fixef(ind.nlme4)[grep("Intercept", nmsfe)],
+            fixef(ind.nlme4)[grep("Intercept", nmsfe)] +
+              fixef(ind.nlme4)[grep("Vcmax.i.geno", nmsfe)]
 )
-#checkit
-cbind(fixVcf, fixVcf + cis[c(5:8)] %*% cbind(-1, 1))
+
+fixVcf <- fixef(ind.nlme4)[grep("Vcmax.f", nmsfe)]
+
+fixtau <- fixef(ind.nlme4)[grep("tau", nmsfe)]
 
 Vcind.fixed <- rbind(
-  cbind(fixVci, fixVci + cis[c(1:4)] %*% cbind(-1, 1)),
-  cbind(fixVcf, fixVcf + cis[c(5:8)] %*% cbind(-1, 1)),
-  cbind(fixef(ind.nlme4)[9], fixef(ind.nlme4)[9] + cis[9] %*% cbind(-1, 1))
+  cbind(fixVci, fixVci + cis[grep("Vcmax.i", nmsfe)] %*% cbind(-1, 1)),
+  cbind(fixVcf, fixVcf + cis[grep("Vcmax.f", nmsfe)] %*% cbind(-1, 1)),
+  cbind(fixtau, fixtau + cis[grep("tau", nmsfe)] %*% cbind(-1, 1))
 )
 Vcind.fixed <- as.data.frame(Vcind.fixed)		
 names(Vcind.fixed) <- c("Est", "lower", "upper")
