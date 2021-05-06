@@ -456,6 +456,8 @@ nd <- data.frame(induction.s = rep(seq(1200, 2400, 10), 4),
                             each = length(seq(1200, 2400, 10))
                  )
 )
+#this line is essential, or in4 has these levels scrambled
+nd$geno <-factor(nd$geno, levels = g.levs)
 in4 <- predict(ind.nlme4, 
 								newdata = nd, 
 								level = 0
