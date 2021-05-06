@@ -71,7 +71,6 @@ levels(Vutl.noAdb$geno)[TVNu.sub(Vutl.noAdb)] <- "V. sp. Savi."
 levels(pred.Vutl.nlme4$geno)[TVNu.sub(pred.Vutl.nlme4)] <- "V. sp. Savi."
 
 levels(ilGKg.df.sub$geno)[TVNu.sub(ilGKg.df.sub)] <- "V. sp. Savi."
-in4$geno <- factor(in4$geno, levels = g.levs)
 levels(in4$geno)[TVNu.sub(in4)] <- "V. sp. Savi."
 
 #Nplants column width is ~8.9 cm = 3.44'
@@ -159,7 +158,7 @@ lapply(
   levels(Vutl.noAdb$geno),
   function(.){
     use <- pred.Vutl.nlme4[pred.Vutl.nlme4$geno == ., ]
-    use <- use[c(1:2520), ]
+    use <- use[c(1:2581), ]
     lines(AS.geno ~ time.s,
           data = use,
           col = o.cols[.],
@@ -222,7 +221,7 @@ lapply(
   levels(ilGKg.df.sub$geno),
   function(.){
     use <- in4[in4$geno == ., ]
-    use <- use[c(1:2520), ]
+    use <- use[c(1:121), ]
     print(use)
     lines(Vcmax.t ~ induction.s,
           data = use,
