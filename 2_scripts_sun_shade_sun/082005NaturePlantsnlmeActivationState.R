@@ -353,38 +353,39 @@ dev.off()
 ################################################################################
 #fixed effects CIs as one-tailed value
 
-cis <- apply(intervals(Vutl.nlme4)$fixed[ , c(1, 2)], 1, diff)
-#fixed effects estimates for ASi combined with cis
-fixASi <- c(fixef(Vutl.nlme4)[1],
-            fixef(Vutl.nlme4)[1] + fixef(Vutl.nlme4)[c(2:4)]
-            )
-#checkit
-cbind(fixASi, fixASi + cis[c(1:4)] %*% cbind(-1, 1))
+AScis <- apply(intervals(Vutl.nlme4)$fixed[ , c("lower", "est.")], 1, diff)
 
-#fixed effects estimates for ASf combined with cis
-fixASf <- c(fixef(Vutl.nlme4)[5],
-            fixef(Vutl.nlme4)[5] + fixef(Vutl.nlme4)[c(6:8)]
-            )
-#checkit
-cbind(fixASf, fixASf + cis[c(5:8)] %*% cbind(-1, 1))
+#fixed effects estimates for ASi
+nmfe <- names(fixef(Vutl.nlme4))
+all(nmfe == names(AScis))
 
-#fixed effects estimates for taud combined with cis
-fixtaud <- c(fixef(Vutl.nlme4)[9],
-             fixef(Vutl.nlme4)[9] + fixef(Vutl.nlme4)[c(10:12)]
+fixASi <- c(fixef(Vutl.nlme4)[grep("ASi.\\(Intercept\\)", nmfe)],
+            fixef(Vutl.nlme4)[grep("ASi.\\(Intercept\\)", nmfe)] +
+              fixef(Vutl.nlme4)[grep("ASi.geno", nmfe)]
+            )
+
+#fixed effects estimates for ASf
+fixASf <- c(fixef(Vutl.nlme4)[grep("ASf.\\(Intercept\\)", nmfe)],
+            fixef(Vutl.nlme4)[grep("ASf.\\(Intercept\\)", nmfe)] +
+              fixef(Vutl.nlme4)[grep("ASf.geno", nmfe)]
+            )
+
+#fixed effects estimates for taud
+fixtaud <- c(fixef(Vutl.nlme4)[grep("tau.d.\\(Intercept\\)", nmfe)],
+             fixef(Vutl.nlme4)[grep("tau.d.\\(Intercept\\)", nmfe)] +
+               fixef(Vutl.nlme4)[grep("tau.d.geno", nmfe)]
              )
-cbind(fixtaud, fixtaud + cis[c(9:12)] %*% cbind(-1, 1))
+
+#fixed effects estimate for taua
+fixtaua <- fixef(Vutl.nlme4)[grep("tau.a", nmfe)]
 
 #put all of these together
-AS.fixed <- rbind(
-  cbind(fixASi, fixASi + cis[c(1:4)] %*% cbind(-1, 1)),
-  cbind(fixASf, fixASf + cis[c(5:8)] %*% cbind(-1, 1)),
-  cbind(fixtaud, fixtaud + cis[c(9:12)] %*% cbind(-1, 1)),
-  cbind(fixef(Vutl.nlme4)[13],
-        fixef(Vutl.nlme4)[13] + cis[c(13)] %*% cbind(-1, 1)
-        )
+AS.fixed <- c(fixASi, fixASf, fixtaud, fixtaua)
+AS.fixed <- cbind(AS.fixed,
+                  AS.fixed + AScis %*% cbind(-1, 1)
 )
 AS.fixed <- as.data.frame(AS.fixed)		
-names(AS.fixed)<-c("Est","lower","upper")
+names(AS.fixed)<-c("Est", "lower", "upper")
 AS.fixed
 
 ################################################################################
