@@ -33,7 +33,7 @@ t.cols <- c(
                        0.5 * 255,
                        0.5 * 255,
                        maxColorValue = 255,
-                       alpha = 0.2*255
+                       alpha = 0.2 * 255
   ),
   "V. sp. Savi."  = rgb(0,
                         0,
@@ -124,21 +124,22 @@ mtext(expression(bold(b)), side = 2, at = 1.05 * 45, line = 4.5, adj = 1)
 
 lines(predict.A + F.A ~ Time.h, data = dmods.Vc$"IT86D-1010",
       col = o.cols["IT86D-1010"],
-      lwd = 2,
+      lwd = 1,
       lty = 1
 )
 
 lines(predict.A ~ Time.h, data = dmods.AS$"IT86D-1010",
       col = o.cols["IT86D-1010"],
-      lwd = 2,
-      lty = 3
+      lwd = 1,
+      lty = 5
 )
 
 lines(predict.A ~ Time.h, data = dmods.Vc$"IT86D-1010",
       col = o.cols["IT86D-1010"],
-      lwd = 2,
-      lty = 2
+      lwd = 1,
+      lty = 6
 )
+
 
 legend(12.24, 47,
        xjust = 0,
@@ -146,11 +147,11 @@ legend(12.24, 47,
        cex = 1.2,
        legend = expression(
          "steady-state PPFD response",
-         italic(tau)["d,V"]~~italic(tau)["a,V"],
-         italic(tau)["d,S"]~~italic(tau)["a,S"]
+         italic(tau)["d,S"]~~italic(tau)["a,S"],
+         italic(tau)["d,V"]~~italic(tau)["a,V"]
        ),
-       lty = c(1:3),
-       lwd = 2,
+       lty = c(1,5,6),
+       lwd = 1,
        col = o.cols["IT86D-1010"],
        ncol = 1,
        bty = "n"
@@ -160,13 +161,15 @@ legend(12.24, 47,
 #dmods objects that get rid of NA
 dmods.Vc.nona <- lapply(dmods.Vc, function(.){ .[!is.na(.$Aft), ] })
 dmods.AS.nona <- lapply(dmods.AS, function(.){ .[!is.na(.$Aft), ] })
+dmods.VA.nona <- lapply(dmods.VA, function(.){ .[!is.na(.$Aft), ] })
+dmods.AV.nona <- lapply(dmods.AV, function(.){ .[!is.na(.$Aft), ] })
 
 ult <- dmods.Vc.nona$"IT86D-1010"$Time.h <= 19.5
 
 plot(cumsum(Aft) / 1000 ~ Time.h,
      data = dmods.Vc.nona$"IT86D-1010"[ult, ],
      type = "n",
-     ylim = c(0, 700),
+     ylim = c(0, 630),
      xlim = c(4.5, 19.5),
      ylab = expression(italic(A)~~(mmol~~m^-2)),
      xlab = expression(time~~of~~day~~(hh:mm)),
@@ -190,36 +193,52 @@ mtext(expression(bold(c)), side = 2, at = 1.05 * 700, line = 4.5, adj = 1)
 lines(cumsum(Aft) / 1000 ~ Time.h,
       data = dmods.Vc.nona$"IT86D-1010"[ult, ],
       col = o.cols["IT86D-1010"],
-      lwd = 2,
+      lwd = 1,
       lty = 1
 )
 
 lines(cumsum(predict) / 1000 ~ Time.h,
       data = dmods.AS.nona$"IT86D-1010"[ult, ],
       col = o.cols["IT86D-1010"],
-      lwd = 2,
-      lty = 3
+      lwd = 1,
+      lty = 5
 )
 
 lines(cumsum(predict) / 1000 ~ Time.h,
       data = dmods.Vc.nona$"IT86D-1010"[ult, ],
       col = o.cols["IT86D-1010"],
-      lwd = 2,
+      lwd = 1,
+      lty = 6
+)
+
+lines(cumsum(predict) / 1000 ~ Time.h,
+      data = dmods.VA.nona$"IT86D-1010"[ult, ],
+      col = o.cols["IT86D-1010"],
+      lwd = 1,
       lty = 2
 )
 
-legend(4.5, 700,
+lines(cumsum(predict) / 1000 ~ Time.h,
+      data = dmods.AV.nona$"IT86D-1010"[ult, ],
+      col = o.cols["IT86D-1010"],
+      lwd = 2,
+      lty = 3
+)
+
+legend(4.5, 660,
        xjust = 0,
        yjust = 1,
        cex = 1.2,
        legend = expression(
          "steady-state PPFD response",
+         italic(tau)["d,S"]~~italic(tau)["a,S"],
          italic(tau)["d,V"]~~italic(tau)["a,V"],
-         italic(tau)["d,S"]~~italic(tau)["a,S"]
+         italic(tau)["d,V"]~~italic(tau)["a,S"],
+         italic(tau)["d,S"]~~italic(tau)["a,V"]
        ),
-       lty = c(1:3),
-       lwd = 2,
-       col = o.cols["IT86D-1010"],
+       lty = c(1, 5, 6, 2, 3),
+       lwd = c(rep(1, 4), 2),
+       col = rep(o.cols["IT86D-1010"], 5),
        ncol = 1,
        bty = "n"
 )
