@@ -188,7 +188,7 @@ axis(side = 2,
      las = 1
 )
 
-mtext(expression(bold(c)), side = 2, at = 1.05 * 700, line = 4.5, adj = 1)
+mtext(expression(bold(c)), side = 2, at = 1.05 * 630, line = 4.5, adj = 1)
 
 lines(cumsum(Aft) / 1000 ~ Time.h,
       data = dmods.Vc.nona$"IT86D-1010"[ult, ],
