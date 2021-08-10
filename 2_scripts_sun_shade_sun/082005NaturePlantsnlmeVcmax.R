@@ -51,7 +51,7 @@ ilGKg <- mapply(AC.j,
 #simplify this to a dataframe, 
 ilGKg.df <- data.frame(do.call(rbind, ilGKg))
 
-#recode the timings to be zero at the start of the shade period
+#recode the timings to be zero at the end of the shade period
 ilGKg.df$induction.s <- ilGKg.df$induction.s + 1200
 
 #check/recode the columns commonly treated as factors
@@ -64,6 +64,8 @@ ilGKg.df$plant
 #Function to compute Aj
 #input here is induction data modified by AC.j to add Aj.Pci.
 #This will be for one replicate
+#this figure was used for analysis,
+# but is replaced by a subsetted and prettier version for supplement
 plot.AtAJ <- function(ind.AJ){
   plot(A ~ induction.s,
        data = ind.AJ,
@@ -71,6 +73,7 @@ plot.AtAJ <- function(ind.AJ){
        ylab = expression(italic(A)~~(mu*mol~~m^-2~~s^-1)),
        xlim = c(-120, 900),
        ylim = c(0, 40),
+       axes = FALSE,
        type = "l",
        main = ind.AJ$plant[1]
        )
@@ -78,6 +81,9 @@ plot.AtAJ <- function(ind.AJ){
   lines(rep(60, 2), c(-1e6, 1e6), col = 5)
   lines(rep(300, 2), c(-1e6, 1e6), col = 3)
   lines(rep(600, 2), c(-1e6, 1e6), col = 4)
+  axis(side = 1, at = seq(0, 900, 300))
+  axis(side = 2, at = seq(0, 40, 20))
+  box()
 }
 
 #Function looping the above.
@@ -85,7 +91,11 @@ plot.AtAJ <- function(ind.AJ){
 # and structured by 'geno'
 plot.AtAJ.bygeno <- function(inds.AJ){
   for (i in levels(inds$geno)){
-    par(mfrow = c(3, 2), mar = c(4, 5.5, 2, 0.5), las = 1, cex = 1.2)
+    par(mfrow = c(3, 2),
+        mar = c(4, 5.5, 2, 0.5),
+        las = 1,
+        cex = 1.2
+        )
 		lapply(
 		  inds.AJ[grep(i, names(inds.AJ), value = TRUE)],
 		  plot.AtAJ
@@ -117,19 +127,24 @@ dev.off()
 
 #limit the timesequences to keep them consistent
 # bearing in mind the 5 min post-shade window
-ilGKg.df <- ilGKg.df[ilGKg.df$induction.s >= -120 &
+#objct renamed here 0821 to enable plotting new supplementary figure
+ilGKg.df.ind <- ilGKg.df[ilGKg.df$induction.s >= 1200 - 120 &
                        ilGKg.df$induction.s <= 1200 + 300, ]
 
-xyplot(Astar*5 + Vcmax.t ~ induction.s | plant, data = ilGKg.df)
+xyplot(Astar*5 + Vcmax.t ~ induction.s | plant, data = ilGKg.df.ind)
 
-#Retain only the columns actually needed for the model
+#Retain only the columns actually needed for the model + plotting raw data
 # to ensure an na.omit below works OK (because FLR values are usually all NA)
-ilGKg.df <- ilGKg.df[ , c("induction.s", "geno", "plant", "Astar", "Vcmax.t")]
+ilGKg.df.ind <- ilGKg.df.ind[ , c("induction.s", "geno", "plant",
+                                  "Astar", "Vcmax.t", "A", "Aj.Pci"
+)
+]
 
 #Make the dataset square so that resampling for CI will work.
+#(Note, this is defunct in that resampling is no longer used)
 #Vectors that give what would be expected in a square dataset:
-Ts <- unique(ilGKg.df$induction.s)
-pl <- unique(ilGKg.df$plant)
+Ts <- unique(ilGKg.df.ind$induction.s)
+pl <- unique(ilGKg.df.ind$plant)
 E.plTs <- paste(rep(pl, each = length(Ts)),
                 rep(Ts, times = length(pl)),
                 sep = "_"
@@ -137,18 +152,18 @@ E.plTs <- paste(rep(pl, each = length(Ts)),
 
 #make a new df using this
 #revised 0121 to make sure that factors are specified parallel to ilGKg.df
-ilGKg.df2 <- data.frame(
+ilGKg.df.indsq <- data.frame(
   geno = factor(
     sapply(strsplit(E.plTs, "_"),
            function(.){ .[1] }
     ),
-    levels = levels(ilGKg.df$geno)
+    levels = levels(ilGKg.df.ind$geno)
   ),
   plant = factor(
     sapply(strsplit(E.plTs, "_"),
            function(.){ paste(.[c(1, 2)], collapse = "_") }
     ),
-    levels = levels(ilGKg.df$plant)
+    levels = levels(ilGKg.df.ind$plant)
   ),
   induction.s = as.numeric(
     sapply(strsplit(E.plTs, "_"),
@@ -158,36 +173,36 @@ ilGKg.df2 <- data.frame(
 )
 
 #checking this will work
-head(ilGKg.df2)
+head(ilGKg.df.indsq)
 
-nrow(ilGKg.df)
-nrow(ilGKg.df2)
+nrow(ilGKg.df.ind)
+nrow(ilGKg.df.indsq)
 
-nrow(merge(ilGKg.df2, ilGKg.df, all.x = TRUE))#seems to work nicely
-table(merge(ilGKg.df2, ilGKg.df, all.x = TRUE)$plant)#as above
+nrow(merge(ilGKg.df.indsq, ilGKg.df.ind, all.x = TRUE))#seems to work nicely
+table(merge(ilGKg.df.indsq, ilGKg.df.ind, all.x = TRUE)$plant)#as above
 
-#do a merge to replace ilGKg.df with the square data
-ilGKg.df <- merge(ilGKg.df2, ilGKg.df, all.x = TRUE)
+#do a merge to replace ilGKg.df.ind with the square data
+ilGKg.df.ind <- merge(ilGKg.df.indsq, ilGKg.df.ind, all.x = TRUE)
 #clean up
-rm(ilGKg.df2, Ts, pl, E.plTs)
+rm(ilGKg.df.indsq, Ts, pl, E.plTs)
 
 #check
-str(ilGKg.df)
+str(ilGKg.df.ind)
 #this looks correct
 
-#to make everything run smoothly,  order ilGKg.df by geno
-ilGKg.df <- ilGKg.df[order(ilGKg.df$geno), ]
+#to make everything run smoothly,  order ilGKg.df.ind by geno
+ilGKg.df.ind <- ilGKg.df.ind[order(ilGKg.df.ind$geno), ]
 
 #add a 'time' variable that includes NA where samples were not collected
-ilGKg.df$inductionNA.s <- replace(ilGKg.df$induction.s,
-                                  is.na(ilGKg.df$Vcmax.t),
+ilGKg.df.ind$inductionNA.s <- replace(ilGKg.df.ind$induction.s,
+                                  is.na(ilGKg.df.ind$Vcmax.t),
                                   NA
                                   )
 
 #quick plots
-xyplot(Astar*5 + Vcmax.t ~ induction.s | plant, data = ilGKg.df)
+xyplot(Astar*5 + Vcmax.t ~ induction.s | plant, data = ilGKg.df.ind)
 #this matches the same plot on 124, so everything is parallel
-xyplot(Astar ~ Vcmax.t | plant, data = ilGKg.df)
+xyplot(Astar ~ Vcmax.t | plant, data = ilGKg.df.ind)
 #Since Astar is assumed to be Vcmax limited and other parameters are constant,
 #Astar and Vcmax.t are close to directly proportional
 # with a curvature determined by the A/ci response...
@@ -211,16 +226,16 @@ xyplot(Astar ~ Vcmax.t | plant, data = ilGKg.df)
 #To make the piecewise model work,
 #I need to add appropriate time sequences & time sequence factors to the data
 #as noted above: unlike nlmeActivationState.R,  I cannot model the 0-1200 period
-# of shade so code here extracts that data as ilGKg.df.ind
-ilGKg.df$s.a <- ifelse(ilGKg.df$induction.s > 1260,  1,  0) #fails if >=1260!
-ilGKg.df.ind <- ilGKg.df[ilGKg.df$s.a == 1, ]
+# i.e. shade, so extracts that data as ilGKg.df.indsa
+ilGKg.df.ind$s.a <- ifelse(ilGKg.df.ind$induction.s > 1260,  1,  0) #fails if >=1260!
+ilGKg.df.indsa <- ilGKg.df.ind[ilGKg.df.ind$s.a == 1, ]
 
 #first model: over-parameterised, i.e., complete rep-by-rep
 ind.nlsList <- nlsList(
   Vcmax.t ~ (Vcmax.f - (Vcmax.f - Vcmax.i) *
                exp( -(induction.s - 1200) / tau.a)) | plant,
   start = c(Vcmax.i = 60, Vcmax.f = 170, tau.a = 120),
-  data = ilGKg.df.ind,
+  data = ilGKg.df.indsa,
   na.action = na.exclude
   )
 
@@ -233,8 +248,8 @@ plot(intervals(ind.nlsList))
 #0321 - remove IT86D-1010_9 and V.adenantha_8 because of high residual variance
 # -problematic in terms of homoskedasticity
 # -also in terms of the basic model because some early data exceed the asymptote
-ilGKg.df.sub <- ilGKg.df.ind[ilGKg.df.ind$plant != "IT86D-1010_9" &
-                                     ilGKg.df.ind$plant != "V. adenantha_8", ]
+ilGKg.df.sub <- ilGKg.df.indsa[ilGKg.df.indsa$plant != "IT86D-1010_9" &
+                                     ilGKg.df.indsa$plant != "V. adenantha_8", ]
 
 ind.nlsList2 <- nlsList(
   Vcmax.t ~ (Vcmax.f - (Vcmax.f - Vcmax.i) *
@@ -355,13 +370,9 @@ anova(ind.nlme4, ind.nlme6, ind.nlme7, ind.nlme8)
 #None of these can be dropped as random effects
 # without significant decrease in logLik, and increase in AIC
 
-#0321 The below is modified to reflect use of ilGKg.df.sub & ind.nlme4
 ################################################################################
 ################################################################################
-#Plots and output
-
-################################################################################
-#produce a plot equivalent to the augPred function
+#Plot out the model, creating something equivalent to an AugPred plot
 t.smth <- c(1200:1800)
 p.smth <- as.character(unique(ilGKg.df.sub[ , "plant"]))
 g.smth <- sapply(strsplit(p.smth, "_"), function(.){ .[1] })
@@ -374,11 +385,11 @@ nd.Vc$geno <- factor(nd.Vc$geno, levels = levels(ilGKg.df.sub$geno))
 
 pred.ind.nlme4 <- data.frame(
   Vc.geno = predict(ind.nlme4, newdata = nd.Vc, level = 0), 
-	Vc.plant = predict(ind.nlme4, newdata = nd.Vc, level = 1), 
-	plant = nd.Vc$plant,
-	geno = nd.Vc$geno, 
-	induction.s = nd.Vc$induction.s
-  )
+  Vc.plant = predict(ind.nlme4, newdata = nd.Vc, level = 1), 
+  plant = nd.Vc$plant,
+  geno = nd.Vc$geno, 
+  induction.s = nd.Vc$induction.s
+)
 
 fhds <- c("plant", "induction.s", "Vcmax.t")
 facs.ind.nlme4 <- ilGKg.df.sub[, fhds]
@@ -391,7 +402,7 @@ get_rep_list <-	function(geno, p.all){
                                  NA)
   by(g.all, g.all$plant, identity)
 }
-	
+
 plot_rep <-	function(p.rep){
   ordp <- p.rep[order(p.rep$induction.s), ]
   plot(1, 1,
@@ -406,11 +417,11 @@ plot_rep <-	function(p.rep){
        at = seq(1200, 1800, 120),
        labels = seq(1200, 1800, 120) - 1200,
        las = 1
-       )
+  )
   axis(side = 2,
        at = seq(0, 400, 100),
        las = 1
-       )
+  )
   points(ordp$Vcmax.t ~ ordp$induction.s)
   lines(ordp$Vc.geno ~ ordp$induction.s, lty = 1)
   lines(ordp$Vc.plant ~ ordp$induction.s, lty = 2)
@@ -425,7 +436,7 @@ allrep_plot <- function(geno, p.all){
 
 pdf(here("output/082005NaturePlantsnlmeVcmax_plot_nlme4.pdf"),
     w = 6, h = 9
-    )							
+)							
 
 par(mar = c(4.5, 5.5, 3, 1),
     tcl = 0.4,
@@ -433,7 +444,7 @@ par(mar = c(4.5, 5.5, 3, 1),
     cex = 1.2,
     cex.lab = 1.2,
     cex.axis = 1.2
-    )
+)
 
 glist <- levels(pred.ind.nlme4$geno)
 lapply(glist, allrep_plot, p.all = pred.ind.nlme4)
@@ -441,11 +452,11 @@ lapply(glist, allrep_plot, p.all = pred.ind.nlme4)
 dev.off()
 
 ################################################################################
-#Here's a plot of the initial part of the Vcmax ~ t response,
+################################################################################
+#Plot of the initial part of the Vcmax ~ t response,
 #showing that after the initial 5 min period when Vcmax is always limiting
 # there are only very marginal effects
-#0121, removed genotype effect, as this is not present in ind.nlme7
-# used ind.nlme7, and renamed objects to reflect 7 instead of 6
+#This complements Figure S8, but is not included in the publication
 pdf(here("output/082505NaturePlantsnlmeVcmax_extrapolation.pdf"),
     paper = "a4",
     w = 8, h = 8
@@ -558,11 +569,12 @@ Vcind.fixed
 ################################################################################
 #Save outputs
 
-#updated 0321
 save(in4,
      ind.nlsList2,
      ind.nlme4,
      Vcind.fixed,
      ilGKg.df.sub,
+     ilGKg.df,#added 0821 to enable separate script plotting FigureS8
      file = here("output/082005NaturePlantsnlmeVcmax.Rdata")
      )
+

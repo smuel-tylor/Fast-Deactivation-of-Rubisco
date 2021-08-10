@@ -104,7 +104,7 @@ AQ.nlme5 <- update(AQ.nlme2,
 
 anova(AQ.nlme2,AQ.nlme4,AQ.nlme5)
 #dropping these is not useful...
-#So, the model requires both fixed and rondom effects for all parameters
+#So, the model requires both fixed and random effects for all parameters
 
 plot(AQ.nlme2)
 #not ideal wrt the initial slope,
