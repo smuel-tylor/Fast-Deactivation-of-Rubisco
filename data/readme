@@ -1,5 +1,0 @@
-RIPE_20210121_cowpeaAS.csv is a copy of Vu_timelapse_combined_032010.csv
-RIPE_20210118_cowpeaGE.csv is a copy of "071819cowpeaGE.csv"
-
-Both were edited to make genotype and column naming parallel
-so that scripts could be kept tidier and more parallel
