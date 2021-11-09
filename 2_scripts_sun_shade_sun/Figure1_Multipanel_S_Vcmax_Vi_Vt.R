@@ -126,7 +126,7 @@ legend(1200 + 10 * 60, 20,
        yjust = 0.5,
        legend = c(
          as.expression(bquote(italic(.(levels(ilGKg.df.sub$geno)[1])))),
-         bquote(italic(.(levels(ilGKg.df.sub$geno)[2]))),
+         bquote(italic(.(substr(levels(ilGKg.df.sub$geno)[2], 1, 6))) * " Savi."),
          bquote(plain(.(levels(ilGKg.df.sub$geno)[3]))),
          bquote(plain(.(levels(ilGKg.df.sub$geno)[4])))
        ),
