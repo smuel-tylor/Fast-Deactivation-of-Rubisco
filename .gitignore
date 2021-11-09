@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 trash
+output/*.pdf
+output/*.Rdata
+output/*.csv
