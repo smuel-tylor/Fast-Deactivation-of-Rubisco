@@ -1,8 +1,9 @@
-#Custom scripts and analyses from Taylor et al Rubisco activation Nature Plants
+Custom scripts and analyses from Taylor et al Rubisco activation Nature Plants
+==============================================================================
 
-Written as an .Rproject in RStudio with R 4.1.1
-Version controlled using Git, with revisions pushed to GitHub
-Using renv to ensure reproducibility of package set up
+Written as an .Rproject in RStudio with R 4.1.1  
+Version controlled using Git, with revisions pushed to GitHub  
+Using renv to ensure reproducibility of package set up  
 The Project should run smoothly in Rstudio, but there may be extra work required for those who do not use RStudio
 
 */data*
@@ -14,14 +15,14 @@ The Project should run smoothly in Rstudio, but there may be extra work required
 
 */2_scripts_sun_shade_sun*
 - fitting mixed effects models
-  -- multi-part models to activation state and Vcmax data
-  -- mixed effects for light response curve parameters (nlme[...].R)
-  -- Figures relating to these analyses
-    --- Limitation state analysis
-    --- Fitted light response curves
-    --- Fitted Activation State x time curves
-    --- Fitted Vcmax x time curves
-    --- Figure 1 for manuscript
+  - multi-part models to activation state and Vcmax data
+  - mixed effects for light response curve parameters (nlme[...].R)
+  - Figures relating to these analyses
+    - Limitation state analysis
+    - Fitted light response curves
+    - Fitted Activation State x time curves
+    - Fitted Vcmax x time curves
+    - Figure 1 for manuscript
 
 */3_scripts_diurnal_cowpea*
 - diurnal models with alternative parameterisations of
